@@ -19,8 +19,6 @@
 
 #include <unistd.h>
 
-#include <ip.h>
-
 typedef int Socket;
 
 /**\brief Show usage of the program
