@@ -28,6 +28,7 @@
  * http://austinmarton.wordpress.com/2011/09/14/sending-raw-ethernet-packets-from-a-specific-interface-in-c-on-linux/
  * http://pwet.fr/man/linux/conventions/raw
  * http://pwet.fr/man/linux/conventions/packet
+ * http://stackoverflow.com/questions/14774668/what-is-raw-socket-in-socket-programming
  */
 int main(int argc, char** argv) {
     Socket sockfd;

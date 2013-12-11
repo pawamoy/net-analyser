@@ -32,4 +32,15 @@ void Usage(void);
  */ 
 int SetTTL(Socket s, int ttl);
 
+/**\brief Opens a raw socket
+ * May print an error, and then exit with code 1
+ * \return Socket
+ */
+Socket OpenRawSocket();
+
+/**\brief Constructs an IP header
+ * \return Size of the header
+ */
+int ConstructIPHeader(struct iphdr* iph);
+
 #endif // __TRACEROUTE_H
