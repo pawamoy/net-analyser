@@ -17,6 +17,8 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
+#include <linux/ip.h>
+
 #include <unistd.h>
 
 typedef int Socket;
@@ -41,6 +43,6 @@ Socket OpenRawSocket();
 /**\brief Constructs an IP header
  * \return Size of the header
  */
-int ConstructIPHeader(struct iphdr* iph);
+int ConstructIPHeader(struct iphdr* iph, const unsigned int ttl);
 
 #endif // __TRACEROUTE_H
