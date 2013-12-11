@@ -26,7 +26,7 @@ int SetTTL(Socket s, int ttl)
     return 1;
 }
 
-Socket OpenRawSocket()
+Socket OpenRawSocket(void)
 {
     Socket s;
     if ((s = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1) {
@@ -37,7 +37,9 @@ Socket OpenRawSocket()
 }
 
 /// IN DEV
-int ConstructIPHeader(struct iphdr* iph, const unsigned int ttl)
+int ConstructIPHeader(struct iphdr* iph, 
+        const unsigned int ttl, 
+        const char *dest)
 {
     iph->ihl = 5;
     iph->version = 4;
@@ -49,7 +51,7 @@ int ConstructIPHeader(struct iphdr* iph, const unsigned int ttl)
     //~ iph->saddr = inet_addr(inet_ntoa(((struct sockaddr_in *)&if_ip.ifr_addr)->sin_addr));
     iph->saddr = inet_addr("192.168.0.1");
     /* Destination IP address */
-    iph->daddr = inet_addr("192.168.0.111");
+    iph->daddr = inet_addr(dest);
     
     return 0;
 }

@@ -38,11 +38,13 @@ int SetTTL(Socket s, int ttl);
  * May print an error, and then exit with code 1
  * \return Socket
  */
-Socket OpenRawSocket();
+Socket OpenRawSocket(void);
 
 /**\brief Constructs an IP header
  * \return Size of the header
  */
-int ConstructIPHeader(struct iphdr* iph, const unsigned int ttl);
+int ConstructIPHeader(struct iphdr* iph, 
+        const unsigned int ttl, 
+        const char *dest);
 
 #endif // __TRACEROUTE_H
