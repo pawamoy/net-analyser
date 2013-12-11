@@ -44,6 +44,9 @@ int WriteLogLF(FILE* logfile, char* string) {
 		ret = fprintf(logfile, "\n");
 	else
 		ret = fprintf(logfile, "%s\n", string); 
+        
+        // flush to disk
+        fflush(logfile);
 	
 	return ret;
 }
