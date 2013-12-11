@@ -37,12 +37,12 @@ int main(int argc, char** argv)
 {
     Socket sockfd = 0;
     
-    struct sockaddr_in server;
-   //socklen_t addrlen = 0;
+//    struct sockaddr_in server;
+//    socklen_t addrlen = 0;
     
-    int portno = 0;
-    int domain = AF_INET;
-    char *ipstr = NULL;
+//    int portno = 0;
+//    int domain = AF_INET;
+    //char *ipstr = NULL;
 
     FILE* logfile;
 
@@ -59,21 +59,17 @@ int main(int argc, char** argv)
     WriteLog(logfile, "Domain: ");
     WriteLogLF(logfile, argv[1]);
 
-    ipstr = GetIPFromHostname(argv[1]);
-    portno = 80;
+    //ipstr = GetIPFromHostname(argv[1]);
+//    portno = 80;
 
     // init remote addr structure and other params
-    server.sin_family = domain;
-    server.sin_port = htons(portno);
+//    server.sin_family = domain;
+//    server.sin_port = htons(portno);
     //addrlen = sizeof (struct sockaddr_in);
+    
+    //server.sin_addr.s_addr = GetIPFromHostname(argv[1]);
 
-    // get addr from command line and convert it
-    if (inet_pton(domain, ipstr, &server.sin_addr.s_addr) != 1) 
-    {
-        perror("Cannot get addr from command line and convert it");
-        //~ close(sockfd);
-        exit(EXIT_FAILURE);
-    }
+
     
 
     int ttl = 0;
