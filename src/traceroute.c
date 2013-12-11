@@ -96,6 +96,14 @@ char *GetIPFromHostname(const char *hostname)
         break;
     }
     
+    // get addr from command line and convert it
+    if (inet_pton(AF_INET, ipstr, ipstr) != 1) 
+    {
+        perror("Cannot get addr from command line and convert it");
+        //~ close(sockfd);
+        exit(EXIT_FAILURE);
+    }
+    
     freeaddrinfo(res);
     
     return ipstr;
