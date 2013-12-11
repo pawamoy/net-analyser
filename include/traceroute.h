@@ -1,5 +1,4 @@
 /**\file traceroute.h
- * \author tim
  * \brief traceroute main (header)
  * \date December 11, 2013, 15:39 AM
  */
@@ -46,5 +45,11 @@ Socket OpenRawSocket(void);
 int ConstructIPHeader(struct iphdr* iph, 
         const unsigned int ttl, 
         const char *dest);
+
+/**\brief Get IP from an hostname (ie. google.fr)
+ * \param hostname const char*
+ * \return NULL on error, a pointer to char
+ */ 
+char *GetIPFromHostname(const char *hostname);
 
 #endif // __TRACEROUTE_H

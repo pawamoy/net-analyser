@@ -1,5 +1,4 @@
 /**\file traceroute.c
- * \author tom
  * \brief traceroute functions
  * \date December 10, 2013, 10:37 AM
  */
@@ -29,9 +28,10 @@ int SetTTL(Socket s, int ttl)
 Socket OpenRawSocket(void)
 {
     Socket s;
-    if ((s = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1) {
-            perror("Unable to open Raw Socket");
-            exit(1);
+    if ((s = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
+    {
+        perror("Unable to open Raw Socket");
+        exit(1);
     }
     return s;
 }
@@ -54,4 +54,49 @@ int ConstructIPHeader(struct iphdr* iph,
     iph->daddr = inet_addr(dest);
     
     return 0;
+}
+
+char *GetIPFromHostname(const char *hostname)
+{
+    struct addrinfo hints, *p, *res;
+    char *ipstr = malloc(sizeof(char)*INET6_ADDRSTRLEN);
+    int status;
+    
+    if (ipstr == NULL)
+    {
+        perror("GetIPFromHostname(): Couldn't init ipstr");
+        return NULL;
+    }
+    
+    memset(&hints, 0, sizeof hints); // make sure the struct is empty
+    hints.ai_family = AF_INET; // don't care IPv4 or IPv6
+    hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
+    hints.ai_flags = AI_PASSIVE; // fill in my IP for me
+
+    if ((status = getaddrinfo(hostname, "80", &hints, &res)) != 0) 
+    {
+        fprintf(stderr, "GetIPFromHostname(): getaddrinfo error: %s\n", gai_strerror(status));
+        return NULL;
+    }
+
+    for (p = res; p != NULL; p = p->ai_next) 
+    {
+        void *addr;
+
+        // get the pointer to the address itself,
+        // different fields in IPv4 and IPv6:
+        struct sockaddr_in *ipv4 = (struct sockaddr_in *) p->ai_addr;
+        addr = &(ipv4->sin_addr);
+
+        // convert the IP to a string and print it:
+        inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
+        printf("%s\n", ipstr);
+//        WriteLog(logfile, "Resolved IP address: ");
+//        WriteLogLF(logfile, ipstr);
+        break;
+    }
+    
+    freeaddrinfo(res);
+    
+    return ipstr;
 }

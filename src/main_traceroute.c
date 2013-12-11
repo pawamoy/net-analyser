@@ -1,5 +1,4 @@
 /**\file main_traceroute.c
- * \author tim
  * \brief traceroute main
  * \date December 10, 2013, 10:37 AM
  */
@@ -30,15 +29,21 @@
  * http://pwet.fr/man/linux/conventions/packet
  * http://stackoverflow.com/questions/14774668/what-is-raw-socket-in-socket-programming
  */
-int main(int argc, char** argv) {
-    Socket sockfd;
+
+
+
+
+int main(int argc, char** argv)
+{
+    Socket sockfd = 0;
+    
     struct sockaddr_in server;
-    socklen_t addrlen;
+   //socklen_t addrlen = 0;
+    
     int portno = 0;
     int domain = AF_INET;
-    int status;
-    struct addrinfo hints, *res, *p;
-    char ipstr[INET6_ADDRSTRLEN];
+    char *ipstr = NULL;
+
     FILE* logfile;
 
     // check the number of args on command line
@@ -54,40 +59,13 @@ int main(int argc, char** argv) {
     WriteLog(logfile, "Domain: ");
     WriteLogLF(logfile, argv[1]);
 
-    memset(&hints, 0, sizeof hints); // make sure the struct is empty
-    hints.ai_family = AF_INET; // don't care IPv4 or IPv6
-    hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
-    hints.ai_flags = AI_PASSIVE; // fill in my IP for me
-
-    if ((status = getaddrinfo(argv[1], "80", &hints, &res)) != 0) 
-    {
-        fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
-        exit(1);
-    }
-
-    for (p = res; p != NULL; p = p->ai_next) 
-    {
-        void *addr;
-
-        // get the pointer to the address itself,
-        // different fields in IPv4 and IPv6:
-        struct sockaddr_in *ipv4 = (struct sockaddr_in *) p->ai_addr;
-        addr = &(ipv4->sin_addr);
-
-        // convert the IP to a string and print it:
-        inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
-        printf("%s\n", ipstr);
-        WriteLog(logfile, "Resolved IP address: ");
-        WriteLogLF(logfile, ipstr);
-        break;
-    }
-
+    ipstr = GetIPFromHostname(argv[1]);
     portno = 80;
 
     // init remote addr structure and other params
     server.sin_family = domain;
     server.sin_port = htons(portno);
-    addrlen = sizeof (struct sockaddr_in);
+    //addrlen = sizeof (struct sockaddr_in);
 
     // get addr from command line and convert it
     if (inet_pton(domain, ipstr, &server.sin_addr.s_addr) != 1) 
@@ -98,68 +76,20 @@ int main(int argc, char** argv) {
     }
     
 
-
-    //~ char buf[1024] = {0};
-    //~ int bytes_sent = 0;
     int ttl = 0;
     
-    for (ttl = 32; ttl > 16; ttl--)
+    for (ttl = 0; ttl < 16; ttl++)
     {
-        // socket factory
-        if ((sockfd = socket(domain, SOCK_STREAM, IPPROTO_TCP)) == -1) {
-            perror("Cannot create the TCP socket");
-            exit(EXIT_FAILURE);
-        }
+        sockfd = OpenRawSocket();
         
-        if (SetTTL(sockfd, ttl) == 0) 
-        {
-            perror("Cannot set TTL value\n");
-            exit(EXIT_FAILURE);
-        }
-
-        printf("Trying to connect to the remote host; TTL: %d\n", ttl);
-        if (connect(sockfd, (struct sockaddr*) &server, addrlen) == -1) {
-            perror("Cannot connect to server");
-            exit(EXIT_FAILURE);
-        }
-
         printf("Connection OK\n");
         
         printf("Disconnection\n");
-
-        // close the socket
+        
         close(sockfd);
     }
     
-
-//    sprintf(buf, "GET %s\n", "index.html");
-//    printf("Cmd sent : %s\n", buf);
-//
-//    // send string
-//    if ((bytes_sent = send(sockfd, buf, strlen(buf) + 1, 0)) == -1)
-//    {
-//        perror("Cannot send string");
-//        close(sockfd);
-//        exit(EXIT_FAILURE);
-//    }
-//    printf("Bytes sent with GET cmd : %d\n", bytes_sent);
-//
-//    memset(buf, 0, sizeof buf);
-//
-//    // send string
-//    if ((bytes_sent = recv(sockfd, buf, 1024, 0)) == -1) 
-//    {
-//        perror("Cannot receive string");
-//        close(sockfd);
-//        exit(EXIT_FAILURE);
-//    }
-//
-//    printf("%s", buf);
-
-
-    freeaddrinfo(res);
-
-	CloseLog(logfile);
+    CloseLog(logfile);
 
     return (EXIT_SUCCESS);
 }
