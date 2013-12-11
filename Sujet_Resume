@@ -1,0 +1,68 @@
+RENDU : 20 DECEMBRE
+
+commenter avec doxygen
+faire un makefile
+compilation avec -std=gnu99 -pedantic -Werror -W -Wall -Wextra -Wmissing-declarations
+-Wmissing-prototypes -Wredundant-decls -Wshadow -Wbad-function-cast -Wcast-qual
+pas de fuite mémoire
+
+rapport (10 pages max) :
+- démarche (genre gestion du temps, difficultés)
+- choix de protocoles
+- répartition du travail
+- choix d'implémentation
+- mécanismes utilisés
+- fonctionnalités du programme
+- utilisation
+
+Programme : 
+Outil d'analyse de route dans réseau IP
+Paramètres sur la ligne de commande :
+	- nom de domaine/adresse IP (v4/v6)
+Utiliser les sockets
+Implémenter traceroute et ping séparément,
+puis un prog principal utilisant les deux :
+Exécution :
+	- vérif avec msg ICMP request que l'hote distant est joignable, puis traceroute
+	- par défaut : ICMP request à intervalle régulier (opt cli)
+	- log des délais (ping), TTL et erreurs
+	- si changements (délais, erreurs) re-traceroute
+	- handler SIGINT : résumé statistique/graphique de toutes les infos (routes + changements, délais, pertes...)
+	- estimation asymétrie entres routes allers et retours
+
+
+
+
+
+
+
+
+Traceroute :
+	- modif champ TTL dans l'entête IP
+	- à 0, le routeur renvoie TTL exceeded
+	- Reverse-DNS pour avoir le nom de routeurs à partir de l'IP
+	- support de TCP, UDP et ICMP
+	- plusieurs modes : pas (nb sauts), fréquence sonde, tentatives, temporisateurs
+
+Ping :
+	- ICMP -> msg ECHO_REQUEST <- ECHO_REPLY
+	- enregistrer pertes et durée envoi-réception (RTT)
+	- support de sondes ICMP, UDP et TCP
+	- analyse diff significatives entre sondes
+
+Controle extrémité :
+	- ping entièrement UDP/TCP
+	- prog produisant info uni-directionnelles pour voir evolution routes entre deux machines
+	- association des résultats A et B
+
+
+
+
+
+
+
+Bonus :
+	Reverse-DNS
+	Paris-Traceroute
+
+on verra ça plus tard :d
