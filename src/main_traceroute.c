@@ -24,6 +24,10 @@
  * 			passage de paramètres ? (ttl, pas, freq, tentative) 
  * 			boucle dans/sur la fonction ?
  * 
+ * RAW SOCKET - UDP
+ * http://austinmarton.wordpress.com/2011/09/14/sending-raw-ethernet-packets-from-a-specific-interface-in-c-on-linux/
+ * http://pwet.fr/man/linux/conventions/raw
+ * http://pwet.fr/man/linux/conventions/packet
  */
 int main(int argc, char** argv) {
     Socket sockfd;
