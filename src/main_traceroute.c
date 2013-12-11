@@ -3,7 +3,8 @@
  * \brief traceroute main
  * \date December 10, 2013, 10:37 AM
  */
- 
+
+#include <assert.h>
 #include "../include/traceroute.h"
 #include "../include/log.h" 
  
@@ -33,13 +34,20 @@ int main(int argc, char** argv) {
     int status;
     struct addrinfo hints, *res, *p;
     char ipstr[INET6_ADDRSTRLEN];
-
+    FILE* logfile;
 
     // check the number of args on command line
     if (argc != 2) 
     {
         Usage();
     }
+    
+    // opens a log file
+    logfile = OpenLog();
+    assert(logfile != NULL);
+    
+    WriteLog(logfile, "Domain: ");
+    WriteLogLF(logfile, argv[1]);
 
     memset(&hints, 0, sizeof hints); // make sure the struct is empty
     hints.ai_family = AF_INET; // don't care IPv4 or IPv6
@@ -64,6 +72,8 @@ int main(int argc, char** argv) {
         // convert the IP to a string and print it:
         inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
         printf("%s\n", ipstr);
+        WriteLog(logfile, "Resolved IP address: ");
+        WriteLogLF(logfile, ipstr);
         break;
     }
 
@@ -88,7 +98,7 @@ int main(int argc, char** argv) {
     //~ int bytes_sent = 0;
     int ttl = 0;
     
-    for (ttl = 16; ttl > 0; ttl--)
+    for (ttl = 32; ttl > 16; ttl--)
     {
         // socket factory
         if ((sockfd = socket(domain, SOCK_STREAM, IPPROTO_TCP)) == -1) {
@@ -144,6 +154,7 @@ int main(int argc, char** argv) {
 
     freeaddrinfo(res);
 
+	CloseLog(logfile);
 
     return (EXIT_SUCCESS);
 }

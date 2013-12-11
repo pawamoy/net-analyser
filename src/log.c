@@ -11,6 +11,7 @@ char* GetDate() {
 	struct tm * timeinfo;
 	char* date;
 	char* space;
+	char* lf;
 
 	time ( &rawtime );
 	timeinfo = localtime ( &rawtime );
@@ -21,13 +22,15 @@ char* GetDate() {
 			*space = '-';
 		else break;
 	}
+	if ((lf = strchr(date, '\n')) != NULL)
+		*lf = '\0';
 	
 	return date;
 }
 
 FILE* OpenLog() {
 	char logpath[1024];
-	snprintf(logpath, 1024, "%s%s", LOGFILE, GetDate());
+	snprintf(logpath, 1024, "%s%s%s", LOGFILE, GetDate(), "\0");
 	return fopen(logpath, "w");
 }
 
