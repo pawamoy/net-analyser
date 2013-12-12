@@ -16,6 +16,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/udp.h>
+#include <net/icmp.h>
 
 #include <linux/ip.h>
 
