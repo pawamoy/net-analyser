@@ -28,6 +28,7 @@
  * http://pwet.fr/man/linux/conventions/raw
  * http://pwet.fr/man/linux/conventions/packet
  * http://stackoverflow.com/questions/14774668/what-is-raw-socket-in-socket-programming
+ * http://www.tenouk.com/Module43a.html
  */
 
 
@@ -37,12 +38,13 @@ int main(int argc, char** argv)
 {
     Socket sockfd = 0;
     
-//    struct sockaddr_in server;
-//    socklen_t addrlen = 0;
     
-//    int portno = 0;
-//    int domain = AF_INET;
-    //char *ipstr = NULL;
+	struct sockaddr_in server;
+	socklen_t addrlen = 0;
+    
+	int portno = 0;
+	int domain = AF_INET;
+	char *ipstr = NULL;
 
     FILE* logfile;
 
@@ -52,6 +54,13 @@ int main(int argc, char** argv)
         Usage();
     }
     
+    // check root privileges
+    if (getuid())
+    {
+        fprintf(stderr, "\nError: you must be root to use raw sockets\n");
+        exit(-1);
+    }
+    
     // opens a log file
     logfile = OpenLog();
     assert(logfile != NULL);
@@ -59,31 +68,43 @@ int main(int argc, char** argv)
     WriteLog(logfile, "Domain: ");
     WriteLogLF(logfile, argv[1]);
 
-    //ipstr = GetIPFromHostname(argv[1]);
-//    portno = 80;
+	ipstr = GetIPFromHostname(argv[1]);
+	portno = 80;
 
     // init remote addr structure and other params
-//    server.sin_family = domain;
-//    server.sin_port = htons(portno);
-    //addrlen = sizeof (struct sockaddr_in);
+	server.sin_family = domain;
+	server.sin_port = htons(portno);
+	addrlen = sizeof (struct sockaddr_in);
     
-    //server.sin_addr.s_addr = GetIPFromHostname(argv[1]);
+	inet_aton(ipstr, &(server.sin_addr));
 
 
-    
+	/* UDP Version */
+	
+	sockfd = OpenRawSocket('U');
+	
+	PacketUDP PU;
+	ConstructUDPPacket(&PU, GetIPFromHostname("localhost"), ipstr);
 
     int ttl = 0;
     
-    for (ttl = 0; ttl < 16; ttl++)
+    for (ttl = 1; ttl < 16; ttl++)
     {
-        sockfd = OpenRawSocket();
-        
-        printf("Connection OK\n");
-        
-        printf("Disconnection\n");
-        
-        close(sockfd);
+		SetIPHeaderTTL(&(PU.iph), ttl);
+		
+		if (sendto(sockfd, &PU, PU.iph.tot_len, 0, (struct sockaddr*)&server, addrlen) < 0)
+		{
+			perror("sendto()");
+			exit(-1);
+		}
+		else
+		{
+			printf("TTL #%-2d - sendto() OK\n", ttl);
+			sleep(1);
+		}
     }
+    
+    close(sockfd);
     
     CloseLog(logfile);
 
