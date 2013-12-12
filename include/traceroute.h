@@ -22,10 +22,9 @@
 
 #include <unistd.h>
 
-typedef struct packet_udp
-{
-	struct iphdr iph;
-	struct udphdr udph;
+typedef struct packet_udp {
+    struct iphdr iph;
+    struct udphdr udph;
 } PacketUDP;
 
 typedef int Socket;
@@ -38,7 +37,7 @@ void Usage(void);
  * \param s socket identifier
  * \param ttl time-to-live field (IP header)
  * \return 0(false) on failure, 1(true) on success
- */ 
+ */
 int SetTTL(Socket s, int ttl);
 
 /**\brief Set TTL field in an IP header
@@ -61,8 +60,8 @@ Socket OpenRawSocket(char protocol);
  * \param dest IP address destination
  * \param protocol U:UDP, I:ICMP, T:TCP , default:TCP (same with lowercase)
  */
-void ConstructIPHeader(struct iphdr* iph, 
-        const unsigned int ttl,  
+void ConstructIPHeader(struct iphdr* iph,
+        const unsigned int ttl,
         const char *source,
         const char *dest,
         const char protocol);
@@ -82,7 +81,7 @@ void ConstructUDPPacket(PacketUDP* buffer, const char* source, const char* dest)
 /**\brief Get IP from an hostname (ie. google.fr)
  * \param hostname String of domain name
  * \return NULL on error, a pointer to char
- */ 
+ */
 char *GetIPFromHostname(const char *hostname);
 
 #endif // __TRACEROUTE_H
