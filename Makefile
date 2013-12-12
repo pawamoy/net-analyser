@@ -27,8 +27,9 @@ log.o : log.c log.h
 	/usr/bin/gcc $(CFLAGS) -c $<
 	/bin/mv $@ $(OPATH)
 
-log :
-	/bin/mkdir log
+doc :
+	/usr/bin/doxygen Doxyfile
+
 obj : 
 	/bin/mkdir obj
 
@@ -39,16 +40,16 @@ bin :
 	/bin/mkdir bin
 
 clean : 
-	/bin/rm obj/* bin/*
+	/bin/rm -rf obj bin
 	
 cleanlog :
 	/bin/rm Log*
 	
-cleanall : clean cleanlog
-	/bin/rm -rf doc/*
+cleanall : clean
+	/bin/rm -rf doc
 
 archive : 
-	/bin/tar -f projetRP.tar.gz -cvz src/*.c include/*.h makefile Doxyfile
+	/bin/tar -f projetRP.tar.gz -cvz src/*.c include/*.h Makefile Doxyfile
 
 run :
-	./bin/main_traceroute $(DOMAIN)
+	/usr/bin/sudo bin/main_traceroute $(DOMAIN)

@@ -46,7 +46,7 @@ int main(int argc, char** argv)
 	int domain = AF_INET;
 	char *ipstr = NULL;
 
-    FILE* logfile;
+    //~ FILE* logfile;
 
     // check the number of args on command line
     if (argc != 2) 
@@ -67,6 +67,9 @@ int main(int argc, char** argv)
     
     //~ WriteLog(logfile, "Domain: ");
     //~ WriteLogLF(logfile, argv[1]);
+    
+    int one = 1;
+    int* val = &one;
 
 	ipstr = GetIPFromHostname(argv[1]);
 	portno = 80;
@@ -83,7 +86,15 @@ int main(int argc, char** argv)
 	
 	sockfd = OpenRawSocket('U');
 	
+	// Do not fill the packet structure
+	if (setsockopt(sockfd, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) < 0)
+	{
+		perror("setsockopt()");
+		exit(-1);
+	}
+	
 	PacketUDP PU;
+	// I don't think giving 'localhost' will work, how to get our own local IP address ?
 	ConstructUDPPacket(&PU, GetIPFromHostname("localhost"), ipstr);
 
     int ttl = 0;
@@ -102,6 +113,8 @@ int main(int argc, char** argv)
 			printf("TTL #%-2d - sendto() OK\n", ttl);
 			sleep(1);
 		}
+		
+		/* need a recvfrom: TTL exceeded or TTL ... */
     }
     
     close(sockfd);
