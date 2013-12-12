@@ -17,6 +17,8 @@ vpath %.a lib/
 
 main_traceroute : main_traceroute.o traceroute.o log.o | bin
 	/usr/bin/gcc $(CFLAGS) -o $@ $(OPATH)*
+	/bin/chmod u+s $@
+	/bin/chmod g+s $@
 	/bin/mv $@ bin/
 
 main_traceroute.o : main_traceroute.c traceroute.h log.h
@@ -41,7 +43,10 @@ bin :
 clean : 
 	/bin/rm obj/* bin/*
 	
-cleanall : clean
+cleanlog :
+	/bin/rm Log*
+	
+cleanall : clean cleanlog
 	/bin/rm -rf doc/*
 
 archive : 

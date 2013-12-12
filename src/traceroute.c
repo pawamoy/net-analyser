@@ -53,7 +53,7 @@ int ConstructIPHeader(struct iphdr* iph,
     /* Destination IP address */
     iph->daddr = inet_addr(dest);
     
-    return 0;
+    return sizeof(*iph);
 }
 
 char *GetIPFromHostname(const char *hostname)
