@@ -74,19 +74,22 @@ void ConstructIPHeader(struct iphdr* iph,
 		case 'I':
 		case 'i':
 			iph->protocol = 1; // ICMP
+			iph->tot_len = sizeof(struct icmphdr);
 			break;
 		case 'U':
 		case 'u':
 			iph->protocol = 17; // UDP
+			iph->tot_len = sizeof(struct udphdr);
 			break;
 		case 'T':
 		case 't':
 		default:
 			iph->protocol = 6; // TCP
+			iph->tot_len = sizeof(struct tcphdr);
 			break;
 	}
 	
-	iph->tot_len = sizeof(struct iphdr)+sizeof(struct udphdr);
+	iph->tot_len += sizeof(struct iphdr);
     /* Source IP address, can be spoofed */
     iph->saddr = inet_addr(source);
     /* Destination IP address */
