@@ -86,7 +86,7 @@ int main(int argc, char** argv)
 	
 	sockfd = OpenRawSocket('U');
 	
-	// Do not fill the packet structure
+	// Kernel, please do not fill the packet structure
 	if (setsockopt(sockfd, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) < 0)
 	{
 		perror("setsockopt()");
