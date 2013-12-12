@@ -61,12 +61,12 @@ int main(int argc, char** argv)
         exit(-1);
     }
     
-    // opens a log file
-    logfile = OpenLog();
-    assert(logfile != NULL);
+    /* opens a log file */
+    //~ logfile = OpenLog();
+    //~ assert(logfile != NULL);
     
-    WriteLog(logfile, "Domain: ");
-    WriteLogLF(logfile, argv[1]);
+    //~ WriteLog(logfile, "Domain: ");
+    //~ WriteLogLF(logfile, argv[1]);
 
 	ipstr = GetIPFromHostname(argv[1]);
 	portno = 80;
@@ -95,7 +95,7 @@ int main(int argc, char** argv)
 		if (sendto(sockfd, &PU, PU.iph.tot_len, 0, (struct sockaddr*)&server, addrlen) < 0)
 		{
 			perror("sendto()");
-			exit(-1);
+			//~ exit(-1);
 		}
 		else
 		{
@@ -106,7 +106,9 @@ int main(int argc, char** argv)
     
     close(sockfd);
     
-    CloseLog(logfile);
+    /* End of UDP Version */
+    
+    //~ CloseLog(logfile);
 
     return (EXIT_SUCCESS);
 }
