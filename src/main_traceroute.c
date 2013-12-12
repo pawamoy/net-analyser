@@ -95,7 +95,7 @@ int main(int argc, char** argv)
 	
 	PacketUDP PU;
 	// I don't think giving 'localhost' will work, how to get our own local IP address ?
-	ConstructUDPPacket(&PU, GetIPFromHostname("localhost"), ipstr);
+	ConstructUDPPacket(&PU, "127.0.0.1", ipstr);
 
     int ttl = 0;
     
