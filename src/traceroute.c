@@ -15,41 +15,42 @@ void Usage()
 int SetTTL(Socket s, int ttl)
 {
     const int *ttl_p = &ttl;
-    
-    if (setsockopt(s, IPPROTO_IP, IP_TTL, ttl_p, sizeof(*ttl_p)) == -1)
+
+    if (setsockopt(s, IPPROTO_IP, IP_TTL, ttl_p, sizeof (*ttl_p)) == -1)
     {
         perror("Cannot set TTL value of socket");
         return 0;
     }
-    
+
     return 1;
 }
 
 void SetIPHeaderTTL(struct iphdr* iph, int ttl)
 {
-	iph->ttl = ttl;
+    iph->ttl = ttl;
 }
 
 Socket OpenRawSocket(char protocol)
 {
     Socket s;
     int p;
-    
-    switch(protocol) {
-		case 'I':
-		case 'i':
-			p = IPPROTO_ICMP;
-			break;
-		case 'U':
-		case 'u':
-			p = IPPROTO_UDP;
-			break;
-		case 'T':
-		case 't':
-		default:
-			p = IPPROTO_TCP;
-	}
-	
+
+    switch (protocol)
+    {
+        case 'I':
+        case 'i':
+            p = IPPROTO_ICMP;
+            break;
+        case 'U':
+        case 'u':
+            p = IPPROTO_UDP;
+            break;
+        case 'T':
+        case 't':
+        default:
+            p = IPPROTO_TCP;
+    }
+
     if ((s = socket(PF_INET, SOCK_RAW, p)) == -1)
     {
         perror("Unable to open Raw Socket");
@@ -58,8 +59,8 @@ Socket OpenRawSocket(char protocol)
     return s;
 }
 
-void ConstructIPHeader(struct iphdr* iph, 
-        const unsigned int ttl, 
+void ConstructIPHeader(struct iphdr* iph,
+        const unsigned int ttl,
         const char *source,
         const char *dest,
         const char protocol)
@@ -69,41 +70,42 @@ void ConstructIPHeader(struct iphdr* iph,
     iph->tos = 16; // Low delay
     iph->id = htons(54321);
     iph->ttl = ttl; // hops
-    
-    switch(protocol) {
-		case 'I':
-		case 'i':
-			iph->protocol = 1; // ICMP
-			iph->tot_len = sizeof(struct icmphdr);
-			break;
-		case 'U':
-		case 'u':
-			iph->protocol = 17; // UDP
-			iph->tot_len = sizeof(struct udphdr);
-			break;
-		case 'T':
-		case 't':
-		default:
-			iph->protocol = 6; // TCP
-			iph->tot_len = sizeof(struct tcphdr);
-			break;
-	}
-	
-	iph->tot_len += sizeof(struct iphdr);
+
+    switch (protocol)
+    {
+        case 'I':
+        case 'i':
+            iph->protocol = 1; // ICMP
+            iph->tot_len = sizeof (struct icmphdr);
+            break;
+        case 'U':
+        case 'u':
+            iph->protocol = 17; // UDP
+            iph->tot_len = sizeof (struct udphdr);
+            break;
+        case 'T':
+        case 't':
+        default:
+            iph->protocol = 6; // TCP
+            iph->tot_len = sizeof (struct tcphdr);
+            break;
+    }
+
+    iph->tot_len += sizeof (struct iphdr);
     /* Source IP address, can be spoofed */
     iph->saddr = inet_addr(source);
     /* Destination IP address */
     iph->daddr = inet_addr(dest);
-    
+
     //~ return sizeof(*iph);
 }
 
 void ConstructUDPHeader(struct udphdr* udph)
 {
-	udph->source = htons(3423);
-	udph->dest = htons(5342);
-	udph->len = sizeof(struct udphdr);
-	udph->check = 0; // skip
+    udph->source = htons(3423);
+    udph->dest = htons(5342);
+    udph->len = sizeof (struct udphdr);
+    udph->check = 0; // skip
 }
 
 void ConstructUDPPacket(PacketUDP* buffer, const char* source, const char* dest)
@@ -111,32 +113,31 @@ void ConstructUDPPacket(PacketUDP* buffer, const char* source, const char* dest)
     ConstructIPHeader(&(buffer->iph), 64, source, dest, 'U');
     ConstructUDPHeader(&(buffer->udph));
 }
-    
 
 char *GetIPFromHostname(const char *hostname)
 {
     struct addrinfo hints, *p, *res;
-    char *ipstr = malloc(sizeof(char)*INET6_ADDRSTRLEN);
+    char *ipstr = malloc(sizeof (char)*INET6_ADDRSTRLEN);
     int status;
-    
+
     if (ipstr == NULL)
     {
         perror("GetIPFromHostname(): Couldn't init ipstr");
         return NULL;
     }
-    
+
     memset(&hints, 0, sizeof hints); // make sure the struct is empty
     hints.ai_family = AF_INET; // don't care IPv4 or IPv6
     hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
     hints.ai_flags = AI_PASSIVE; // fill in my IP for me
 
-    if ((status = getaddrinfo(hostname, "80", &hints, &res)) != 0) 
+    if ((status = getaddrinfo(hostname, "80", &hints, &res)) != 0)
     {
         fprintf(stderr, "GetIPFromHostname(): getaddrinfo error: %s\n", gai_strerror(status));
         return NULL;
     }
 
-    for (p = res; p != NULL; p = p->ai_next) 
+    for (p = res; p != NULL; p = p->ai_next)
     {
         void *addr;
 
@@ -148,19 +149,19 @@ char *GetIPFromHostname(const char *hostname)
         // convert the IP to a string and print it:
         inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
         printf("%s\n", ipstr);
-		//~ WriteLog(logfile, "Resolved IP address: ");
-		//~ WriteLogLF(logfile, ipstr);
+        //~ WriteLog(logfile, "Resolved IP address: ");
+        //~ WriteLogLF(logfile, ipstr);
         break;
     }
-    
+
     // get addr from command line and convert it
-    if (inet_pton(AF_INET, ipstr, ipstr) != 1) 
+    if (inet_pton(AF_INET, ipstr, ipstr) != 1)
     {
         perror("Cannot get addr from command line and convert it");
         exit(EXIT_FAILURE);
     }
-    
+
     freeaddrinfo(res);
-    
+
     return ipstr;
 }
