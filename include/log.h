@@ -31,7 +31,7 @@ FILE* OpenLog(void);
  */
 int CloseLog(FILE* logfile);
 
-/**\brief Appends a string and a line feed in a log file
+/**\brief Appends a string and a line feed in a log file.
  * If the string is NULL, writes a line feed
  * \param logfile The log file to write
  * \param string The string to append
@@ -39,7 +39,7 @@ int CloseLog(FILE* logfile);
  */
 int WriteLogLF(FILE* logfile, char* string);
 
-/**\brief Appends a string in a log file
+/**\brief Appends a string in a log file.
  * If the string is NULL, doesn't write anything
  * \param logfile The log file to write
  * \param string The string to append

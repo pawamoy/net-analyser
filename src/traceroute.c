@@ -6,8 +6,6 @@
 #include "../include/traceroute.h"
 #include "../include/log.h"
 
-#define PACKET_LENGTH 8192
-
 void Usage()
 {
     printf("USAGE: traceroute servername\n");

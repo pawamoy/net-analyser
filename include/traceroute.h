@@ -46,7 +46,7 @@ int SetTTL(Socket s, int ttl);
  */
 void SetIPHeaderTTL(struct iphdr* iph, int ttl);
 
-/**\brief Opens a raw socket
+/**\brief Opens a raw socket.
  * May print an error, and then exit with code 1
  * \param protocol I:ICMP, U:UDP, T:TCP, default:TCP (same with lowercase)
  * \return Socket
@@ -79,7 +79,7 @@ void ConstructUDPHeader(struct udphdr* udph);
 void ConstructUDPPacket(PacketUDP* buffer, const char* source, const char* dest);
 
 /**\brief Get IP from an hostname (ie. google.fr)
- * \param hostname const char*
+ * \param hostname String of domain name
  * \return NULL on error, a pointer to char
  */ 
 char *GetIPFromHostname(const char *hostname);
