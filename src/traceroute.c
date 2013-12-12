@@ -6,6 +6,8 @@
 #include "../include/traceroute.h"
 #include "../include/log.h"
 
+#define PACKET_LENGTH 8192
+
 void Usage()
 {
     printf("USAGE: traceroute servername\n");
@@ -25,10 +27,32 @@ int SetTTL(Socket s, int ttl)
     return 1;
 }
 
-Socket OpenRawSocket(void)
+void SetIPHeaderTTL(struct iphdr* iph, int ttl)
+{
+	iph->ttl = ttl;
+}
+
+Socket OpenRawSocket(char protocol)
 {
     Socket s;
-    if ((s = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) == -1)
+    int p;
+    
+    switch(protocol) {
+		case 'I':
+		case 'i':
+			p = IPPROTO_ICMP;
+			break;
+		case 'U':
+		case 'u':
+			p = IPPROTO_UDP;
+			break;
+		case 'T':
+		case 't':
+		default:
+			p = IPPROTO_TCP;
+	}
+	
+    if ((s = socket(PF_INET, SOCK_RAW, p)) == -1)
     {
         perror("Unable to open Raw Socket");
         exit(1);
@@ -36,25 +60,57 @@ Socket OpenRawSocket(void)
     return s;
 }
 
-/// IN DEV
-int ConstructIPHeader(struct iphdr* iph, 
+void ConstructIPHeader(struct iphdr* iph, 
         const unsigned int ttl, 
-        const char *dest)
+        const char *source,
+        const char *dest,
+        const char protocol)
 {
     iph->ihl = 5;
     iph->version = 4;
     iph->tos = 16; // Low delay
     iph->id = htons(54321);
     iph->ttl = ttl; // hops
-    iph->protocol = 17; // UDP
+    
+    switch(protocol) {
+		case 'I':
+		case 'i':
+			iph->protocol = 1; // ICMP
+			break;
+		case 'U':
+		case 'u':
+			iph->protocol = 17; // UDP
+			break;
+		case 'T':
+		case 't':
+		default:
+			iph->protocol = 6; // TCP
+			break;
+	}
+	
+	iph->tot_len = sizeof(struct iphdr)+sizeof(struct udphdr);
     /* Source IP address, can be spoofed */
-    //~ iph->saddr = inet_addr(inet_ntoa(((struct sockaddr_in *)&if_ip.ifr_addr)->sin_addr));
-    iph->saddr = inet_addr("192.168.0.1");
+    iph->saddr = inet_addr(source);
     /* Destination IP address */
     iph->daddr = inet_addr(dest);
     
-    return sizeof(*iph);
+    //~ return sizeof(*iph);
 }
+
+void ConstructUDPHeader(struct udphdr* udph)
+{
+	udph->source = htons(3423);
+	udph->dest = htons(5342);
+	udph->len = sizeof(struct udphdr);
+	udph->check = 0; // skip
+}
+
+void ConstructUDPPacket(PacketUDP* buffer, const char* source, const char* dest)
+{
+    ConstructIPHeader(&(buffer->iph), 64, source, dest, 'U');
+    ConstructUDPHeader(&(buffer->udph));
+}
+    
 
 char *GetIPFromHostname(const char *hostname)
 {
@@ -91,8 +147,8 @@ char *GetIPFromHostname(const char *hostname)
         // convert the IP to a string and print it:
         inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
         printf("%s\n", ipstr);
-//        WriteLog(logfile, "Resolved IP address: ");
-//        WriteLogLF(logfile, ipstr);
+		//~ WriteLog(logfile, "Resolved IP address: ");
+		//~ WriteLogLF(logfile, ipstr);
         break;
     }
     
@@ -100,7 +156,6 @@ char *GetIPFromHostname(const char *hostname)
     if (inet_pton(AF_INET, ipstr, ipstr) != 1) 
     {
         perror("Cannot get addr from command line and convert it");
-        //~ close(sockfd);
         exit(EXIT_FAILURE);
     }
     
