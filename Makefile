@@ -11,7 +11,7 @@ OPATH = obj/
 vpath %.c src/
 vpath %.h include/
 vpath %.o obj/
-vpath main bin/
+vpath main_traceroute bin/
 vpath %.a lib/
 
 
