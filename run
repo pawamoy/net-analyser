@@ -1,2 +1,6 @@
 #!/bin/bash
-/usr/bin/sudo bin/main_traceroute "$1"
+if [ ! -f bin/main_traceroute ]; then
+	make && /usr/bin/sudo bin/main_traceroute "$1"
+else
+	/usr/bin/sudo bin/main_traceroute "$1"
+fi
