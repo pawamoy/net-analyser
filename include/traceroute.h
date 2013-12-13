@@ -84,7 +84,13 @@ void ConstructUDPPacket(PacketUDP* buffer, const char* source, const char* dest)
  * \param hostname String of domain name
  * \return NULL on error, a pointer to char
  */
-char *GetIPFromHostname(const char *hostname);
+char* GetIPFromHostname(const char *hostname);
+
+/**\brief Get IP from an hostname (ie. google.fr)
+ * \param hostname String of domain name
+ * \return NULL on error, a pointer to char
+ */
+char* hostname_to_ip(char * hostname);
 
 /**\brief Get my own IP address
  * \return String (address)
@@ -97,11 +103,10 @@ char* GetMyIP(void);
  */
 int IsMyAddress(char* addr);
 
-/**\brief Decodes an ICMP header
- * \param buf Buffer to fill
- * \param bytes Bytes read with recvfrom
- * \param from Address used with recvfrom
+/**\brief Get host name from an IP address
+ * \param ip The IP address
+ * \return A string containing host name
  */
-void DecodeICMPHeader(char *buf, int bytes, struct sockaddr_in *from);
+char* GetHostNameFromIP(const char* ip);
 
 #endif // __TRACEROUTE_H

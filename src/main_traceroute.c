@@ -102,9 +102,14 @@ int main(int argc, char** argv)
 {
     Socket sockfd = 0;
 
-
     struct sockaddr_in server;
     socklen_t addrlen = 0;
+    
+    struct iphdr* iph;
+    //~ struct icmphdr* icmph;
+
+	char rsaddr[128];
+	char rdaddr[128];
 
     int portno = 0;
     int domain = AF_INET;
@@ -135,6 +140,7 @@ int main(int argc, char** argv)
     //~ logfile = OpenLog();
     //~ assert(logfile != NULL);
 
+	printf("Domain: %s\n", argv[1]);
     //~ WriteLog(logfile, "Domain: ");
     //~ WriteLogLF(logfile, argv[1]);
 
@@ -145,10 +151,12 @@ int main(int argc, char** argv)
     //~ int* time_val = &timeout;
 
     ipstr = GetIPFromHostname(argv[1]);
+    printf("Resolved address: %s\n", ipstr);
     //~ WriteLog(logfile, "Resolved IP address: ");
 	//~ WriteLogLF(logfile, ipstr);
 	
 	myip = GetMyIP();
+	printf("My own IP address: %s\n\n\n", myip);
     //~ WriteLog(logfile, "My IP address: ");
 	//~ WriteLogLF(logfile, myip);
 	
@@ -210,9 +218,13 @@ int main(int argc, char** argv)
 		}
 		else
 		{
-			// a corriger en mode linux
-			printf("Message ICMP à récup, %d bytes lu\n", bread);
-			//~ DecodeICMPHeader(recvbuf, bread, &server);
+			// Print recvbuf contents :
+			iph = (struct iphdr*)recvbuf;
+			printf("Received TTL: %d\n", iph->ttl);
+			//~ printf("Received Protocol: %d\n", iph->protocol);
+			printf("Received saddr: %s\n", inet_ntop(AF_INET, &(iph->saddr), rsaddr, 128));
+			printf("... corresponding to host %s\n", GetHostNameFromIP(inet_ntop(AF_INET, &(iph->saddr), rsaddr, 128)));
+			printf("Received daddr: %s\n", inet_ntop(AF_INET, &(iph->daddr), rdaddr, 128));
 		}
 			
     }
