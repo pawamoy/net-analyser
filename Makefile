@@ -50,6 +50,3 @@ cleanall : clean
 
 archive : 
 	/bin/tar -f projetRP.tar.gz -cvz src/*.c include/*.h Makefile Doxyfile
-
-run :
-	/usr/bin/sudo bin/main_traceroute $(DOMAIN)
