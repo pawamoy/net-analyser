@@ -12,6 +12,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <ifaddrs.h>
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -19,6 +20,7 @@
 #include <linux/icmp.h>
 #include <linux/tcp.h>
 #include <linux/ip.h>
+#include <ctype.h>
 
 #include <unistd.h>
 
@@ -83,5 +85,23 @@ void ConstructUDPPacket(PacketUDP* buffer, const char* source, const char* dest)
  * \return NULL on error, a pointer to char
  */
 char *GetIPFromHostname(const char *hostname);
+
+/**\brief Get my own IP address
+ * \return String (address)
+ */
+char* GetMyIP(void);
+
+/**\brief Parse address to see if it is my address (not local)
+ * \param addr Pointer to a string (address)
+ * \return 1(yes), 0(no)
+ */
+int IsMyAddress(char* addr);
+
+/**\brief Decodes an ICMP header
+ * \param buf Buffer to fill
+ * \param bytes Bytes read with recvfrom
+ * \param from Address used with recvfrom
+ */
+void DecodeICMPHeader(char *buf, int bytes, struct sockaddr_in *from);
 
 #endif // __TRACEROUTE_H
