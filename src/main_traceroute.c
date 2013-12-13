@@ -195,7 +195,7 @@ int main(int argc, char** argv)
 
     int ttl = 0;
 
-    for (ttl = 1; ttl < 16; ttl++)
+    for (ttl = 3; ttl <= 16; ttl++)
     {
         SetIPHeaderTTL(&(PU.iph), ttl);
 
@@ -210,7 +210,7 @@ int main(int argc, char** argv)
             printf("TTL %-2d - sendto() OK\n", ttl);
         }
 
-        bread = recvfrom(sockfd, recvbuf, MAX_PACKET, 0, (struct sockaddr*)&server, &addrlen);
+        bread = recvfrom(sockfd, recvbuf, MAX_PACKET, 0, NULL, NULL);//(struct sockaddr*)&server, &addrlen);
         if (bread == -1)
         {
 			perror("recvfrom()");
@@ -220,11 +220,12 @@ int main(int argc, char** argv)
 		{
 			// Print recvbuf contents :
 			iph = (struct iphdr*)recvbuf;
-			printf("Received TTL: %d\n", iph->ttl);
-			//~ printf("Received Protocol: %d\n", iph->protocol);
-			printf("Received saddr: %s\n", inet_ntop(AF_INET, &(iph->saddr), rsaddr, 128));
-			printf("... corresponding to host %s\n", GetHostNameFromIP(inet_ntop(AF_INET, &(iph->saddr), rsaddr, 128)));
-			printf("Received daddr: %s\n", inet_ntop(AF_INET, &(iph->daddr), rdaddr, 128));
+			
+			inet_ntop(AF_INET, &(iph->saddr), rsaddr, 128);
+			inet_ntop(AF_INET, &(iph->daddr), rdaddr, 128);
+			
+			printf("saddr: %s\t%s\n", rsaddr, GetHostNameFromIP(rsaddr));
+			printf("daddr: %s\t%s\n", rdaddr, GetHostNameFromIP(rdaddr));
 		}
 			
     }
