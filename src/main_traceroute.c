@@ -211,7 +211,7 @@ int main(int argc, char** argv)
 		else
 		{
 			// a corriger en mode linux
-			printf("Message ICMP à récup\n");
+			printf("Message ICMP à récup, %d bytes lu\n", bread);
 			//~ DecodeICMPHeader(recvbuf, bread, &server);
 		}
 			
