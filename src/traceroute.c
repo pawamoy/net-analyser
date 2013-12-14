@@ -8,7 +8,7 @@
 
 void Usage()
 {
-    printf("USAGE: traceroute servername\n");
+    printf("USAGE: traceroute servername [-h HOPS] [-n MIN_TTL] [-m MAX_TTL] [-r SEC] [-s SEC]\n");
     exit(-1);
 }
 
@@ -28,6 +28,17 @@ int SetTTL(Socket s, int ttl)
 int SetRCVTimeOut(Socket s, struct timeval to)
 {
 	if (setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (const void*) &to, sizeof(to)) == -1)
+    {
+		perror("setsockopt receive timeout");
+		return 0;
+	}
+	
+	return 1;
+}
+
+int SetSNDTimeOut(Socket s, struct timeval to)
+{
+	if (setsockopt(s, SOL_SOCKET, SO_SNDTIMEO, (const void*) &to, sizeof(to)) == -1)
     {
 		perror("setsockopt receive timeout");
 		return 0;
