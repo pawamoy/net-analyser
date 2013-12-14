@@ -336,10 +336,12 @@ void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
     Socket send_socket, receive_socket;
     socklen_t addrlen = sizeof (struct sockaddr_in);
     
-    char rsaddr[MAX_ADDRESS], recvbuf[MAX_PACKET];
-    char* host = NULL;
+    struct sockaddr_in recept;
     
-    struct iphdr* iph = NULL;
+    char recvbuf[MAX_PACKET];
+    char *host = NULL, *rsaddr = NULL;
+    
+    //~ struct iphdr* iph = NULL;
     
     int ttl, min_ttl = ttl_t[0], max_ttl = ttl_t[1], hops = ttl_t[2];
 
@@ -364,7 +366,7 @@ void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
 		}
 		else
 		{
-			if (recvfrom(receive_socket, recvbuf, MAX_PACKET, 0, NULL, NULL) == -1)
+			if (recvfrom(receive_socket, recvbuf, MAX_PACKET, 0, (struct sockaddr*)&recept, &addrlen) == -1)
 			{
 				printf(" %-2d %-15s *\n", ttl, "*");
 				if (logfile != NULL)
@@ -374,8 +376,9 @@ void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
 			}
 			else
 			{
-				iph = (struct iphdr*) recvbuf;
-				inet_ntop(AF_INET, &(iph->saddr), rsaddr, MAX_ADDRESS);
+				rsaddr = inet_ntoa(recept.sin_addr);
+				//~ iph = (struct iphdr*) recvbuf;
+				//~ inet_ntop(AF_INET, &(iph->saddr), rsaddr, MAX_ADDRESS);
 				host = GetHostNameFromIP(rsaddr);
 				printf(" %-2d %-15s %s\n", ttl, rsaddr, host);
 				if (logfile != NULL)
