@@ -42,6 +42,13 @@ void Usage(void);
  */
 int SetTTL(Socket s, int ttl);
 
+/**\brief Set receiving timeout for socket 
+ * \param s socket identifier
+ * \param to Timeout to set
+ * \return 0(false) on failure, 1(true) on success
+ */
+int SetRCVTimeOut(Socket s, struct timeval to);
+
 /**\brief Set TTL field in an IP header
  * \param iph The IP header pointer
  * \param ttl TTL value to set
@@ -54,6 +61,13 @@ void SetIPHeaderTTL(struct iphdr* iph, int ttl);
  * \return Socket
  */
 Socket OpenRawSocket(char protocol);
+
+/**\brief Opens a dgram socket.
+ * May print an error, and then exit with code 1
+ * \param protocol I:ICMP, U:UDP, T:TCP, default:TCP (same with lowercase)
+ * \return Socket
+ */
+Socket OpenDgramSocket(char protocol);
 
 /**\brief Constructs an IP header
  * \param iph Pointer to an IP Header structure
