@@ -120,7 +120,7 @@ int main(int argc, char** argv)
     myip = GetMyIP();
     
     // stdout
-    printf("Domain: %s\tAddress: %s\n\n", argv[1], ipstr);
+    printf("Domain: %s, \tAddress: %s\n\n", argv[1], ipstr);
     
 	// opens a log file, exit if error
 	if (log_data == 1)

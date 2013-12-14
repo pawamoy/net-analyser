@@ -1,4 +1,5 @@
 /**\file log.c
+ * \author tim
  * \brief functions to log informations
  * \date December 11, 2013, 15:01 AM
  */

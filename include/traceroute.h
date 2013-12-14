@@ -1,5 +1,5 @@
 /**\file traceroute.h
- * \brief traceroute main (header)
+ * \brief traceroute functions (header)
  * \date December 11, 2013, 15:39 AM
  */
 
