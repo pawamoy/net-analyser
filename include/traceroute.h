@@ -24,6 +24,10 @@
 
 #include <unistd.h>
 
+
+#define MAX_PACKET 1024
+#define MAX_ADDRESS 128
+
 typedef struct packet_udp {
     struct iphdr iph;
     struct udphdr udph;
@@ -117,5 +121,16 @@ int IsMyAddress(char* addr);
  * \return A string containing host name
  */
 char* GetHostNameFromIP(const char* ip);
+
+/**\brief Traceroute with UDP
+ * \param rcvt Receive timer
+ * \param sndt Send timer
+ * \param ttl_t Contains min_ttl, max_ttl, hops in this order
+ * \param logfile FILE pointer (if NULL, don't log)
+ * \param server Destination data
+ * \param my_addr Source data
+ */
+void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
+             struct sockaddr_in server, struct sockaddr_in my_addr);
 
 #endif // __TRACEROUTE_H
