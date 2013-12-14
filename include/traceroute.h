@@ -49,12 +49,6 @@ int SetTTL(Socket s, int ttl);
  */
 int SetRCVTimeOut(Socket s, struct timeval to);
 
-/**\brief Set TTL field in an IP header
- * \param iph The IP header pointer
- * \param ttl TTL value to set
- */
-void SetIPHeaderTTL(struct iphdr* iph, int ttl);
-
 /**\brief Opens a raw socket.
  * May print an error, and then exit with code 1
  * \param protocol I:ICMP, U:UDP, T:TCP, default:TCP (same with lowercase)
@@ -69,42 +63,36 @@ Socket OpenRawSocket(char protocol);
  */
 Socket OpenDgramSocket(char protocol);
 
-/**\brief Constructs an IP header
- * \param iph Pointer to an IP Header structure
- * \param ttl Time-to-live value
- * \param source IP address source
- * \param dest IP address destination
- * \param protocol U:UDP, I:ICMP, T:TCP , default:TCP (same with lowercase)
- */
-void ConstructIPHeader(struct iphdr* iph,
-        const unsigned int ttl,
-        const char *source,
-        const char *dest,
-        const char protocol);
-
-/**\brief Constructs an UDP header
- * \param udph Pointer to an UDP header structure
- */
-void ConstructUDPHeader(struct udphdr* udph);
-
-/**\brief Constructs a packet with UDP and IP headers
- * \param buffer Address of a PacketUDP structure
- * \param source Source IP address
- * \param dest Destination IP address
- */
-void ConstructUDPPacket(PacketUDP* buffer, const char* source, const char* dest);
+//~ /**\brief Constructs an IP header
+ //~ * \param iph Pointer to an IP Header structure
+ //~ * \param ttl Time-to-live value
+ //~ * \param source IP address source
+ //~ * \param dest IP address destination
+ //~ * \param protocol U:UDP, I:ICMP, T:TCP , default:TCP (same with lowercase)
+ //~ */
+//~ void ConstructIPHeader(struct iphdr* iph,
+        //~ const unsigned int ttl,
+        //~ const char *source,
+        //~ const char *dest,
+        //~ const char protocol);
+//~ 
+//~ /**\brief Constructs an UDP header
+ //~ * \param udph Pointer to an UDP header structure
+ //~ */
+//~ void ConstructUDPHeader(struct udphdr* udph);
+//~ 
+//~ /**\brief Constructs a packet with UDP and IP headers
+ //~ * \param buffer Address of a PacketUDP structure
+ //~ * \param source Source IP address
+ //~ * \param dest Destination IP address
+ //~ */
+//~ void ConstructUDPPacket(PacketUDP* buffer, const char* source, const char* dest);
 
 /**\brief Get IP from an hostname (ie. google.fr)
  * \param hostname String of domain name
  * \return NULL on error, a pointer to char
  */
 char* GetIPFromHostname(const char *hostname);
-
-/**\brief Get IP from an hostname (ie. google.fr)
- * \param hostname String of domain name
- * \return NULL on error, a pointer to char
- */
-char* hostname_to_ip(char * hostname);
 
 /**\brief Get my own IP address
  * \return String (address)

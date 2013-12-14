@@ -36,11 +36,6 @@ int SetRCVTimeOut(Socket s, struct timeval to)
 	return 1;
 }
 
-void SetIPHeaderTTL(struct iphdr* iph, int ttl)
-{
-    iph->ttl = ttl;
-}
-
 Socket OpenRawSocket(char protocol)
 {
     Socket s;
@@ -98,7 +93,7 @@ Socket OpenDgramSocket(char protocol)
     }
     return s;
 }
-
+/*
 void ConstructIPHeader(struct iphdr* iph,
         const unsigned int ttl,
         const char *source,
@@ -132,9 +127,9 @@ void ConstructIPHeader(struct iphdr* iph,
     }
 
     iph->tot_len += sizeof (struct iphdr);
-    /* Source IP address, can be spoofed */
+    // Source IP address, can be spoofed
     iph->saddr = inet_addr(source);
-    /* Destination IP address */
+    // Destination IP address
     iph->daddr = inet_addr(dest);
 
     //~ return sizeof(*iph);
@@ -154,7 +149,7 @@ void ConstructUDPPacket(PacketUDP* buffer, const char* source, const char* dest)
     ConstructUDPHeader(&(buffer->udph));
 }
 
-/*
+
 char *GetIPFromHostname(const char *hostname)
 {
     struct addrinfo hints, *p, *pbak, *res;
