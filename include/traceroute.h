@@ -49,6 +49,13 @@ int SetTTL(Socket s, int ttl);
  */
 int SetRCVTimeOut(Socket s, struct timeval to);
 
+/**\brief Set sending timeout for socket 
+ * \param s socket identifier
+ * \param to Timeout to set
+ * \return 0(false) on failure, 1(true) on success
+ */
+int SetSNDTimeOut(Socket s, struct timeval to);
+
 /**\brief Opens a raw socket.
  * May print an error, and then exit with code 1
  * \param protocol I:ICMP, U:UDP, T:TCP, default:TCP (same with lowercase)

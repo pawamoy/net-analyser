@@ -8,6 +8,7 @@
 //~ #include <errno.h>
 
 #define MAX_PACKET 1024
+#define MAX_ADDRESS 128
 
 /*
  * Transformer le nom de domaine fourni en adresse IP										DONE
@@ -63,63 +64,89 @@ void SwitchErrno(int err)
 
 int main(int argc, char** argv)
 {
-    Socket send_socket    = 0,
-	       receive_socket = 0;
-
+	//-----------------------------------------------------//
+	// variable declaration
+	//-----------------------------------------------------//
+    Socket             send_socket          = 0,
+	                   receive_socket       = 0;
     struct sockaddr_in server,
                        my_addr;
-    socklen_t addrlen    = 0,
-	          my_addrlen = 0;
+    struct iphdr      *iph                  = NULL;
+    socklen_t          addrlen              = 0,
+	                   my_addrlen           = 0;
+    char               rsaddr[MAX_ADDRESS],
+                       recvbuf[MAX_PACKET];
+    int                domain               = AF_INET,
+                       portno               = 80,
+                       ttl                  = 0,
+                       min_ttl              = 1,
+                       max_ttl              = 30,
+                       hops                 = 1,
+					   rcv_timeout          = 3,
+					   snd_timeout          = 3,
+                       i                    = 0;
+    char              *ipstr                = NULL,
+                      *myip                 = NULL;
+    FILE              *logfile              = NULL;
 
-    char rsaddr[128];
-    char rdaddr[128];
 
-    int portno = 80;
-    int domain = AF_INET;
-    char *ipstr = NULL;
-    char* myip = NULL;
-
-    int bread;
-    int bwrote;
-    
-    int ttl = 0;
-    
-    //~ int one = 1;
-    //~ int* val = &one;
-
-    char recvbuf[1024];
-
-    //~ FILE* logfile;
-
+	//-----------------------------------------------------//
+	// first verifications
+	//-----------------------------------------------------//
+	
     // check the number of args on command line
-    if (argc != 2)
-        Usage();
+    if (argc < 2) Usage();
 
     // check root privileges
     if (getuid()) {
         fprintf(stderr, "\nError: you must be root to use raw sockets\n");
         exit(-1);
     }
+    
+    // argument analysis
+    for (i=1; i<argc; i++)
+    {
+		     if (strcmp(argv[i], "-m") == 0 ||
+		         strcmp(argv[i], "--maxttl") == 0)       max_ttl = atoi(argv[i+1]);
+		else if (strcmp(argv[i], "-n") == 0 ||
+		         strcmp(argv[i], "--minttl") == 0)       min_ttl = atoi(argv[i+1]);
+		else if (strcmp(argv[i], "-h") == 0 ||
+		         strcmp(argv[i], "--hops") == 0)         hops = atoi(argv[i+1]);
+		else if (strcmp(argv[i], "-r") == 0 ||
+		         strcmp(argv[i], "--recv-timeout") == 0) rcv_timeout = atoi(argv[i+1]);
+		else if (strcmp(argv[i], "-s") == 0 ||
+		         strcmp(argv[i], "--send-timeout") == 0) snd_timeout = atoi(argv[i+1]);
+	}
 
-    /* opens a log file */
-    //~ logfile = OpenLog();
-    //~ assert(logfile != NULL);
 
-    printf("Domain: %s\n", argv[1]);
-    //~ WriteLog(logfile, "Domain: ");
-    //~ WriteLogLF(logfile, argv[1]);
+	//-----------------------------------------------------//
+	// first information outputs and log
+	//-----------------------------------------------------//
+	
+    // opens a log file, exit if error
+    logfile = OpenLog();
+    if (logfile == NULL) exit(-1);
 
-
+	// get infos
     ipstr = GetIPFromHostname(argv[1]);
-    printf("Resolved address: %s\n", ipstr);
-    //~ WriteLog(logfile, "Resolved IP address: ");
-    //~ WriteLogLF(logfile, ipstr);
-
     myip = GetMyIP();
-    printf("My own IP address: %s\n\n\n", myip);
-    //~ WriteLog(logfile, "My IP address: ");
-    //~ WriteLogLF(logfile, myip);
+    
+    // stdout
+    printf("Domain: %s\tAddress: %s\n", argv[1], ipstr);
+    
+	// log
+    WriteLog(logfile, "Domain: ");
+    WriteLogLF(logfile, argv[1]);
+    WriteLog(logfile, "Resolved IP address: ");
+    WriteLogLF(logfile, ipstr);
+    WriteLog(logfile, "My IP address: ");
+    WriteLogLF(logfile, myip);
 
+
+	//-----------------------------------------------------//
+	// initializing some data
+	//-----------------------------------------------------//
+	
     // init remote addr structure and other params
     server.sin_family = domain;
     server.sin_port = htons(portno);
@@ -138,12 +165,14 @@ int main(int argc, char** argv)
     
     
     
-    /* UDP Version */
+    //-----------------------------------------------------//
+	// starting UDP version
+	//-----------------------------------------------------//
 
-    // Timeout of 3 seconds for the socket
-    struct timeval timeout = { 2, 0};   /* 2 seconds, 0 microseconds */
+    struct timeval r_timeout = { rcv_timeout, 0 };
+    struct timeval s_timeout = { snd_timeout, 0 };
 
-    for (ttl = 1; ttl <= 16; ttl++)
+    for (ttl = min_ttl; ttl <= max_ttl; ttl += hops)
     {
 		send_socket    = OpenDgramSocket('U');
 		receive_socket = OpenRawSocket('I');
@@ -151,29 +180,31 @@ int main(int argc, char** argv)
 		if (bind(receive_socket, (struct sockaddr*)&my_addr, my_addrlen) == -1)
 		{
 			perror("bind receive socket");
-			SwitchErrno(errno);
+			exit(-1);
 		}
 		
         if ( ! SetTTL(send_socket, ttl))
 			exit(-1);
-			
-		if ( ! SetRCVTimeOut(receive_socket, timeout))
+		
+		if ( ! SetSNDTimeOut(send_socket, s_timeout))
+			exit(-1);
+		
+		if ( ! SetRCVTimeOut(receive_socket, r_timeout))
 			exit(-1);
 
-        bwrote = sendto(send_socket, "", 0, 0, (struct sockaddr*) &server, addrlen);
-        if (bwrote == -1)
+        if (sendto(send_socket, "", 0, 0, (struct sockaddr*) &server, addrlen) == -1)
             perror("sendto()");
-
-        bread = recvfrom(receive_socket, recvbuf, MAX_PACKET, 0, NULL, NULL); //
-        if (bread == -1)
-            printf(" %-2d %-15s *\n", ttl, "*");
-
-        else
-        {
-            iph = (struct iphdr*) recvbuf;
-            inet_ntop(AF_INET, &(iph->saddr), rsaddr, 128);
-            printf(" %-2d %-15s %s\n", ttl, rsaddr, GetHostNameFromIP(rsaddr));
-        }
+		else
+		{
+			if (recvfrom(receive_socket, recvbuf, MAX_PACKET, 0, NULL, NULL) == -1)
+				printf(" %-2d %-15s *\n", ttl, "*");
+			else
+			{
+				iph = (struct iphdr*) recvbuf;
+				inet_ntop(AF_INET, &(iph->saddr), rsaddr, 128);
+				printf(" %-2d %-15s %s\n", ttl, rsaddr, GetHostNameFromIP(rsaddr));
+			}
+		}
 		
 		close(send_socket);
 		close(receive_socket);
@@ -182,7 +213,7 @@ int main(int argc, char** argv)
 
     /* End of UDP Version */
 
-    //~ CloseLog(logfile);
+    CloseLog(logfile);
 
     return (EXIT_SUCCESS);
 }
