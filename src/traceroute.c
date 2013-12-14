@@ -327,5 +327,66 @@ char* GetHostNameFromIP(const char* ip)
 	return host;
 }
 
+void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
+             struct sockaddr_in server, struct sockaddr_in my_addr)
+{
+	struct timeval r_timeout = { rcvt, 0 };
+    struct timeval s_timeout = { sndt, 0 };
+    
+    Socket send_socket, receive_socket;
+    socklen_t addrlen = sizeof (struct sockaddr_in);
+    
+    char rsaddr[MAX_ADDRESS], recvbuf[MAX_PACKET];
+    char* host = NULL;
+    
+    struct iphdr* iph = NULL;
+    
+    int ttl, min_ttl = ttl_t[0], max_ttl = ttl_t[1], hops = ttl_t[2];
 
+    for (ttl = min_ttl; ttl <= max_ttl; ttl += hops)
+    {
+		send_socket    = OpenDgramSocket('U');
+		receive_socket = OpenRawSocket('I');
+		
+		if (bind(receive_socket, (struct sockaddr*)&my_addr, addrlen) == -1)
+		{
+			perror("bind receive socket");
+			exit(-1);
+		}
+		
+        if ( ! SetTTL(send_socket, ttl))			     exit(-1);
+		if ( ! SetSNDTimeOut(send_socket, s_timeout))    exit(-1);
+		if ( ! SetRCVTimeOut(receive_socket, r_timeout)) exit(-1);
+
+        if (sendto(send_socket, "", 0, 0, (struct sockaddr*) &server, addrlen) == -1)
+        {
+            perror(" sendto()");
+		}
+		else
+		{
+			if (recvfrom(receive_socket, recvbuf, MAX_PACKET, 0, NULL, NULL) == -1)
+			{
+				printf(" %-2d %-15s *\n", ttl, "*");
+				if (logfile != NULL)
+				{
+					fprintf(logfile, " %-2d %-15s *\n", ttl, "*");
+				}
+			}
+			else
+			{
+				iph = (struct iphdr*) recvbuf;
+				inet_ntop(AF_INET, &(iph->saddr), rsaddr, MAX_ADDRESS);
+				host = GetHostNameFromIP(rsaddr);
+				printf(" %-2d %-15s %s\n", ttl, rsaddr, host);
+				if (logfile != NULL)
+				{
+					fprintf(logfile, " %-2d %-15s %s\n", ttl, rsaddr, host);
+				}
+			}
+		}
+		
+		close(send_socket);
+		close(receive_socket);
+    }
+}
 
