@@ -34,6 +34,7 @@
  * http://www.tenouk.com/Module43a.html
  * http://forum.hardware.fr/hfr/Programmation/C-2/code-source-ping-sujet_30136_1.htm
  * http://stackoverflow.com/questions/13543554/how-to-receive-icmp-request-in-c-with-raw-sockets
+ * http://cities.lk.net/trproto.html
  */
 
 void SwitchErrno(int);
@@ -162,9 +163,6 @@ int main(int argc, char** argv)
     int one = 1;
     int* val = &one;
 
-    //~ int timeout = 1000;
-    //~ int* time_val = &timeout;
-
     ipstr = GetIPFromHostname(argv[1]);
     printf("Resolved address: %s\n", ipstr);
     //~ WriteLog(logfile, "Resolved IP address: ");
@@ -198,16 +196,12 @@ int main(int argc, char** argv)
     
     // Timeout of 3 seconds for the socket
     struct timeval timeout = { 3, 0};   /* 3 seconds, 0 microseconds */
-    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const void*) &timeout, sizeof(timeout));
-
-    // Sets timeout
-    //~ bread = setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, time_val, sizeof(timeout));
-    //~ if (bread == -1)
-    //~ {
-    //~ perror("setsockopt(SO_SNDTIMEO)");
-    //~ SwitchErrno(errno);
-    //~ exit(-1);
-    //~ }
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const void*) &timeout, sizeof(timeout)) == -1)
+    {
+		perror("setsockopt receive timeout");
+		SwitchErrno(errno);
+		exit(-1);
+	}
 
     PacketUDP PU;
     ConstructUDPPacket(&PU, myip, ipstr);
