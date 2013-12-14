@@ -25,6 +25,17 @@ int SetTTL(Socket s, int ttl)
     return 1;
 }
 
+int SetRCVTimeOut(Socket s, struct timeval to)
+{
+	if (setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (const void*) &to, sizeof(to)) == -1)
+    {
+		perror("setsockopt receive timeout");
+		return 0;
+	}
+	
+	return 1;
+}
+
 void SetIPHeaderTTL(struct iphdr* iph, int ttl)
 {
     iph->ttl = ttl;
@@ -51,9 +62,38 @@ Socket OpenRawSocket(char protocol)
             p = IPPROTO_TCP;
     }
 
-    if ((s = socket(PF_INET, SOCK_RAW, p)) == -1)
+    if ((s = socket(AF_INET, SOCK_RAW, p)) == -1)
     {
         perror("Unable to open Raw Socket");
+        exit(1);
+    }
+    return s;
+}
+
+Socket OpenDgramSocket(char protocol)
+{
+    Socket s;
+    int p;
+
+    switch (protocol)
+    {
+        case 'I':
+        case 'i':
+            p = IPPROTO_ICMP;
+            break;
+        case 'U':
+        case 'u':
+            p = IPPROTO_UDP;
+            break;
+        case 'T':
+        case 't':
+        default:
+            p = IPPROTO_TCP;
+    }
+
+    if ((s = socket(AF_INET, SOCK_DGRAM, p)) == -1)
+    {
+        perror("Unable to open dgram Socket");
         exit(1);
     }
     return s;
@@ -270,17 +310,13 @@ char* GetHostNameFromIP(const char* ip)
 	struct hostent *hent;
 	struct in_addr addr;
 	char* host = (char*)malloc(128*sizeof(char));
+	strcpy(host, ip);
 
 	if (!inet_aton(ip, &addr))
-	{
-		strcpy(host, ip);
 		return host;
-	}
 
 	if ((hent = gethostbyaddr((char *)&(addr.s_addr), sizeof(addr.s_addr), AF_INET)))
-	{
 		strcpy(host, hent->h_name);
-	}
 
 	return host;
 }
