@@ -3,30 +3,22 @@
  * \date December 10, 2013, 10:37 AM
  */
 
-#include <assert.h>
 #include "../include/traceroute.h"
 #include "../include/log.h" 
-#include <errno.h>
+//~ #include <errno.h>
 
 #define MAX_PACKET 1024
 
 /*
  * Transformer le nom de domaine fourni en adresse IP										DONE
  * SetTTL																					DONE
+ * modif champ TTL sur socket																DONE
+ * à 0, le routeur renvoie TTL exceeded														OSEF
+ * Reverse-DNS pour avoir le nom de routeurs à partir de l'IP								DONE
+ * support de TCP, UDP et ICMP																DONE: UDP
+ * plusieurs modes : pas (nb sauts), fréquence sonde, tentatives, temporisateurs			INDEV
  * 
- * modif champ TTL dans l'entête IP
- * à 0, le routeur renvoie TTL exceeded
- * Reverse-DNS pour avoir le nom de routeurs à partir de l'IP
- * support de TCP, UDP et ICMP
- * plusieurs modes : pas (nb sauts), fréquence sonde, tentatives, temporisateurs
- * 
- * TODO:
- * 		fonction pour envoyer un paquet plusieurs fois en augmentant le ttl à chaque fois
- * 			ttl static dans la fonction ? 
- * 			passage de paramètres ? (ttl, pas, freq, tentative) 
- * 			boucle dans/sur la fonction ?
- * 
- * RAW SOCKET - UDP
+ * Ressources internet:
  * http://austinmarton.wordpress.com/2011/09/14/sending-raw-ethernet-packets-from-a-specific-interface-in-c-on-linux/
  * http://pwet.fr/man/linux/conventions/raw
  * http://pwet.fr/man/linux/conventions/packet
@@ -37,7 +29,7 @@
  * http://cities.lk.net/trproto.html
  */
 
-void SwitchErrno(int);
+/*void SwitchErrno(int);
 
 void SwitchErrno(int err)
 {
@@ -67,7 +59,7 @@ void SwitchErrno(int err)
         case EPIPE: printf("EPIPE\n");                  break;
         case EROFS: printf("EROFS\n");                  break;
     }
-}
+}*/
 
 int main(int argc, char** argv)
 {
@@ -79,9 +71,6 @@ int main(int argc, char** argv)
     socklen_t addrlen    = 0,
 	          my_addrlen = 0;
 
-    struct iphdr* iph;
-    //~ struct icmphdr* icmph;
-
     char rsaddr[128];
     char rdaddr[128];
 
@@ -92,6 +81,8 @@ int main(int argc, char** argv)
 
     int bread;
     int bwrote;
+    
+    int ttl = 0;
     
     //~ int one = 1;
     //~ int* val = &one;
@@ -149,27 +140,11 @@ int main(int argc, char** argv)
     
     /* UDP Version */
 
-
-    // Kernel, please do not fill the packet structure
-    //~ if (setsockopt(send_socket, IPPROTO_IP, IP_HDRINCL, val, sizeof (one)) < 0)
-    //~ {
-        //~ perror("setsockopt(): cannot set IP_HDRINCL to true");
-        //~ exit(-1);
-    //~ }
-    
     // Timeout of 3 seconds for the socket
     struct timeval timeout = { 2, 0};   /* 2 seconds, 0 microseconds */
 
-    //~ PacketUDP PU;
-    //~ ConstructUDPHeader(&(PU.udph));
-
-    int ttl = 0;
-
     for (ttl = 1; ttl <= 16; ttl++)
     {
-		//~ ConstructIPHeader(&(PU.iph), ttl, myip, ipstr, 'U');
-        //~ SetIPHeaderTTL(&(PU.iph), ttl);
-        
 		send_socket    = OpenDgramSocket('U');
 		receive_socket = OpenRawSocket('I');
 		
@@ -185,35 +160,19 @@ int main(int argc, char** argv)
 		if ( ! SetRCVTimeOut(receive_socket, timeout))
 			exit(-1);
 
-        //~ bwrote = sendto(send_socket, &PU, PU.iph.tot_len, 0, (struct sockaddr*) &server, addrlen);
         bwrote = sendto(send_socket, "", 0, 0, (struct sockaddr*) &server, addrlen);
         if (bwrote == -1)
-        {
             perror("sendto()");
-            //~ SwitchErrno(errno);
-        }
-        //~ else
-        //~ {
-            //~ printf("TTL %-2d - sendto() OK\n", ttl);
-        //~ }
 
         bread = recvfrom(receive_socket, recvbuf, MAX_PACKET, 0, NULL, NULL); //
         if (bread == -1)
-        {
-            //~ perror("recvfrom()");
-            //~ SwitchErrno(errno);
             printf(" %-2d %-15s *\n", ttl, "*");
-        }
+
         else
         {
-            // Print recvbuf contents :
             iph = (struct iphdr*) recvbuf;
-
             inet_ntop(AF_INET, &(iph->saddr), rsaddr, 128);
-            inet_ntop(AF_INET, &(iph->daddr), rdaddr, 128);
-
             printf(" %-2d %-15s %s\n", ttl, rsaddr, GetHostNameFromIP(rsaddr));
-            //~ printf("daddr: %s\t%s\n", rdaddr, GetHostNameFromIP(rdaddr));
         }
 		
 		close(send_socket);
