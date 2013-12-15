@@ -104,7 +104,8 @@ Socket OpenDgramSocket(char protocol)
     }
     return s;
 }
-/*
+
+/* not used
 void ConstructIPHeader(struct iphdr* iph,
         const unsigned int ttl,
         const char *source,
@@ -336,12 +337,18 @@ void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
     Socket send_socket, receive_socket;
     socklen_t addrlen = sizeof (struct sockaddr_in);
     
-    struct sockaddr_in recept;
+    struct sockaddr_in recept = { 0 };
     
     char recvbuf[MAX_PACKET];
     char *host = NULL, *rsaddr = NULL;
     
+    char dest[MAX_ADDRESS];
+    strcpy(dest, inet_ntoa(server.sin_addr));
+    
+    int reach_dest = 0;
+    
     //~ struct iphdr* iph = NULL;
+    //~ struct icmphdr* icmph = NULL;
     
     int ttl, min_ttl = ttl_t[0], max_ttl = ttl_t[1], hops = ttl_t[2];
 
@@ -360,7 +367,7 @@ void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
 		if ( ! SetSNDTimeOut(send_socket, s_timeout))    exit(-1);
 		if ( ! SetRCVTimeOut(receive_socket, r_timeout)) exit(-1);
 
-        if (sendto(send_socket, "", 0, 0, (struct sockaddr*) &server, addrlen) == -1)
+        if (sendto(send_socket, "hello", 0, 0, (struct sockaddr*) &server, addrlen) == -1)
         {
             perror(" sendto()");
 		}
@@ -368,6 +375,8 @@ void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
 		{
 			if (recvfrom(receive_socket, recvbuf, MAX_PACKET, 0, (struct sockaddr*)&recept, &addrlen) == -1)
 			{
+				//~ icmph = (struct icmphdr*) (recvbuf + sizeof(struct iphdr));
+				//~ printf("type=%d\ncode=%d\n", icmph->type, icmph->code);
 				printf(" %-2d %-15s *\n", ttl, "*");
 				if (logfile != NULL)
 				{
@@ -376,20 +385,35 @@ void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
 			}
 			else
 			{
+				// way 1
 				rsaddr = inet_ntoa(recept.sin_addr);
+				// way 2
 				//~ iph = (struct iphdr*) recvbuf;
+				//~ icmph = (struct icmphdr*) (recvbuf + sizeof(struct iphdr));
+				//~ if (icmph->type != ICMP_TIME_EXCEEDED)
+				//~ {
+					//~ printf(" Reach destination\n");
+				//~ }
+				//~ printf("type=%d\ncode=%d\n", icmph->type, icmph->code);
 				//~ inet_ntop(AF_INET, &(iph->saddr), rsaddr, MAX_ADDRESS);
+				// end way
 				host = GetHostNameFromIP(rsaddr);
 				printf(" %-2d %-15s %s\n", ttl, rsaddr, host);
 				if (logfile != NULL)
 				{
 					fprintf(logfile, " %-2d %-15s %s\n", ttl, rsaddr, host);
 				}
+				if (strcmp(dest, rsaddr)==0)
+				{
+					reach_dest = 1;
+				}
 			}
 		}
 		
 		close(send_socket);
 		close(receive_socket);
+		
+		if (reach_dest) return;
     }
 }
 

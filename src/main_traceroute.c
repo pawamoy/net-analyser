@@ -25,6 +25,7 @@
  * http://forum.hardware.fr/hfr/Programmation/C-2/code-source-ping-sujet_30136_1.htm
  * http://stackoverflow.com/questions/13543554/how-to-receive-icmp-request-in-c-with-raw-sockets
  * http://cities.lk.net/trproto.html
+ * https://blogs.oracle.com/ksplice/entry/learning_by_doing_writing_your
  */
 
 /*void SwitchErrno(int);
@@ -78,6 +79,7 @@ int main(int argc, char** argv)
     char              *ipstr        = NULL,
                       *myip         = NULL;
     FILE              *logfile      = NULL;
+    //~ uid_t              uid;
 
 
 	//-----------------------------------------------------//
@@ -88,6 +90,8 @@ int main(int argc, char** argv)
     if (argc < 2) Usage();
 
     // check root privileges
+    //~ uid = getuid();
+    //~ setuid(uid);
     if (getuid()) {
         fprintf(stderr, "\nError: you must be root to use raw sockets\n");
         exit(-1);
@@ -120,7 +124,7 @@ int main(int argc, char** argv)
     myip = GetMyIP();
     
     // stdout
-    printf("Domain: %s, \tAddress: %s\n\n", argv[1], ipstr);
+    printf("Domain: %s\nAddress: %s\n\n", argv[1], ipstr);
     
 	// opens a log file, exit if error
 	if (log_data == 1)
@@ -142,10 +146,11 @@ int main(int argc, char** argv)
     server.sin_port = htons(portno);
     inet_aton(ipstr, &(server.sin_addr));
 
-	// init local addr structure and other params
+	// init local addr structure
     my_addr.sin_family      = AF_INET;
-    my_addr.sin_port        = htons(atoi(argv[1]));
-    my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    my_addr.sin_port        = htons(portno+1);
+    inet_aton(myip, &(my_addr.sin_addr));
+    //~ my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     
     
     //-----------------------------------------------------//
