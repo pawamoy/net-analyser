@@ -54,15 +54,12 @@ Socket OpenRawSocket(char protocol)
 
     switch (protocol)
     {
-        case 'I':
         case 'i':
             p = IPPROTO_ICMP;
             break;
-        case 'U':
         case 'u':
             p = IPPROTO_UDP;
             break;
-        case 'T':
         case 't':
         default:
             p = IPPROTO_TCP;
@@ -83,15 +80,12 @@ Socket OpenDgramSocket(char protocol)
 
     switch (protocol)
     {
-        case 'I':
         case 'i':
             p = IPPROTO_ICMP;
             break;
-        case 'U':
         case 'u':
             p = IPPROTO_UDP;
             break;
-        case 'T':
         case 't':
         default:
             p = IPPROTO_TCP;
@@ -105,7 +99,6 @@ Socket OpenDgramSocket(char protocol)
     return s;
 }
 
-/* not used
 void ConstructIPHeader(struct iphdr* iph,
         const unsigned int ttl,
         const char *source,
@@ -120,17 +113,14 @@ void ConstructIPHeader(struct iphdr* iph,
 
     switch (protocol)
     {
-        case 'I':
         case 'i':
             iph->protocol = 1; // ICMP
             iph->tot_len = sizeof (struct icmphdr);
             break;
-        case 'U':
         case 'u':
             iph->protocol = 17; // UDP
             iph->tot_len = sizeof (struct udphdr);
             break;
-        case 'T':
         case 't':
         default:
             iph->protocol = 6; // TCP
@@ -147,21 +137,14 @@ void ConstructIPHeader(struct iphdr* iph,
     //~ return sizeof(*iph);
 }
 
-void ConstructUDPHeader(struct udphdr* udph)
+void ConstructICMPHeader(struct icmphdr* icmph)
 {
-    udph->source = htons(3423);
-    udph->dest = htons(5342);
-    udph->len = sizeof (struct udphdr);
-    udph->check = 0; // skip
+    icmph->type = ICMP_ECHO;
+    icmph->code = 0;
+    icmph->checksum = 0; // skip
 }
 
-void ConstructUDPPacket(PacketUDP* buffer, const char* source, const char* dest)
-{
-    ConstructIPHeader(&(buffer->iph), 64, source, dest, 'U');
-    ConstructUDPHeader(&(buffer->udph));
-}
-
-
+/* not used
 char *GetIPFromHostname(const char *hostname)
 {
     struct addrinfo hints, *p, *pbak, *res;
@@ -350,12 +333,14 @@ void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
     //~ struct iphdr* iph = NULL;
     //~ struct icmphdr* icmph = NULL;
     
+    int tent, tentative = 3;
+    
     int ttl, min_ttl = ttl_t[0], max_ttl = ttl_t[1], hops = ttl_t[2];
 
     for (ttl = min_ttl; ttl <= max_ttl; ttl += hops)
     {
-		send_socket    = OpenDgramSocket('U');
-		receive_socket = OpenRawSocket('I');
+		send_socket    = OpenDgramSocket('u');
+		receive_socket = OpenRawSocket('i');
 		
 		if (bind(receive_socket, (struct sockaddr*)&my_addr, addrlen) == -1)
 		{
@@ -367,47 +352,53 @@ void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
 		if ( ! SetSNDTimeOut(send_socket, s_timeout))    exit(-1);
 		if ( ! SetRCVTimeOut(receive_socket, r_timeout)) exit(-1);
 
-        if (sendto(send_socket, "hello", 0, 0, (struct sockaddr*) &server, addrlen) == -1)
+        if (sendto(send_socket, "hello", 4, 0, (struct sockaddr*) &server, addrlen) == -1)
         {
-            perror(" sendto()");
+            perror("sendto()");
 		}
 		else
 		{
-			if (recvfrom(receive_socket, recvbuf, MAX_PACKET, 0, (struct sockaddr*)&recept, &addrlen) == -1)
+			printf(" %-2d ", ttl);
+			for (tent = 0; tent < tentative; tent++)
 			{
-				//~ icmph = (struct icmphdr*) (recvbuf + sizeof(struct iphdr));
-				//~ printf("type=%d\ncode=%d\n", icmph->type, icmph->code);
-				printf(" %-2d %-15s *\n", ttl, "*");
-				if (logfile != NULL)
+				if (recvfrom(receive_socket, recvbuf, MAX_PACKET, 0, (struct sockaddr*)&recept, &addrlen) == -1)
 				{
-					fprintf(logfile, " %-2d %-15s *\n", ttl, "*");
+					//~ icmph = (struct icmphdr*) (recvbuf + sizeof(struct iphdr));
+					//~ printf("type=%d\ncode=%d\n", icmph->type, icmph->code);
+					printf("* ");
+					if (logfile != NULL)
+					{
+						fprintf(logfile, " %-2d %-15s *\n", ttl, "*");
+					}
+				}
+				else
+				{
+					// way 1
+					rsaddr = inet_ntoa(recept.sin_addr);
+					// way 2
+					//~ iph = (struct iphdr*) recvbuf;
+					//~ icmph = (struct icmphdr*) (recvbuf + sizeof(struct iphdr));
+					//~ if (icmph->type != ICMP_TIME_EXCEEDED)
+					//~ {
+						//~ printf(" Reach destination\n");
+					//~ }
+					//~ printf("type=%d\ncode=%d\n", icmph->type, icmph->code);
+					//~ inet_ntop(AF_INET, &(iph->saddr), rsaddr, MAX_ADDRESS);
+					// end way
+					host = GetHostNameFromIP(rsaddr);
+					printf("%-15s %s", rsaddr, host);
+					if (logfile != NULL)
+					{
+						fprintf(logfile, " %-2d %-15s %s\n", ttl, rsaddr, host);
+					}
+					if (strcmp(dest, rsaddr)==0)
+					{
+						reach_dest = 1;
+					}
+					break;
 				}
 			}
-			else
-			{
-				// way 1
-				rsaddr = inet_ntoa(recept.sin_addr);
-				// way 2
-				//~ iph = (struct iphdr*) recvbuf;
-				//~ icmph = (struct icmphdr*) (recvbuf + sizeof(struct iphdr));
-				//~ if (icmph->type != ICMP_TIME_EXCEEDED)
-				//~ {
-					//~ printf(" Reach destination\n");
-				//~ }
-				//~ printf("type=%d\ncode=%d\n", icmph->type, icmph->code);
-				//~ inet_ntop(AF_INET, &(iph->saddr), rsaddr, MAX_ADDRESS);
-				// end way
-				host = GetHostNameFromIP(rsaddr);
-				printf(" %-2d %-15s %s\n", ttl, rsaddr, host);
-				if (logfile != NULL)
-				{
-					fprintf(logfile, " %-2d %-15s %s\n", ttl, rsaddr, host);
-				}
-				if (strcmp(dest, rsaddr)==0)
-				{
-					reach_dest = 1;
-				}
-			}
+			printf("\n");
 		}
 		
 		close(send_socket);
@@ -417,3 +408,99 @@ void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
     }
 }
 
+void LoopICMP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
+             struct sockaddr_in server, struct sockaddr_in my_addr)
+{
+	struct timeval r_timeout = { rcvt, 0 };
+    struct timeval s_timeout = { sndt, 0 };
+    
+    Socket send_socket, receive_socket;
+    socklen_t addrlen = sizeof (struct sockaddr_in);
+    
+    struct sockaddr_in recept = { 0 };
+    
+    char recvbuf[MAX_PACKET];
+    char *host = NULL, *rsaddr = NULL;
+    
+    char dest[MAX_ADDRESS];
+    strcpy(dest, inet_ntoa(server.sin_addr));
+    char source[MAX_ADDRESS];
+    strcpy(source, inet_ntoa(my_addr.sin_addr));
+    
+    int reach_dest = 0;
+    int tent, tentative = 3;
+    int ttl, min_ttl = ttl_t[0], max_ttl = ttl_t[1], hops = ttl_t[2];
+	
+    PacketICMP pack_icmp, *recv_pack;      
+    
+    for (ttl = min_ttl; ttl <= max_ttl; ttl += hops)
+    {
+		send_socket    = OpenRawSocket('i');
+		receive_socket = OpenRawSocket('i');
+		
+		if (bind(receive_socket, (struct sockaddr*)&my_addr, addrlen) == -1)
+		{
+			perror("bind receive socket");
+			exit(-1);
+		}
+		
+		ConstructIPHeader(&(pack_icmp.iph), ttl, source, dest, 'i');
+		ConstructICMPHeader(&(pack_icmp.icmph));
+		
+		if ( ! SetSNDTimeOut(send_socket, s_timeout))    exit(-1);
+		if ( ! SetRCVTimeOut(receive_socket, r_timeout)) exit(-1);
+
+        if (sendto(send_socket, &pack_icmp, sizeof(pack_icmp), 0, (struct sockaddr*) &server, addrlen) == -1)
+        {
+            perror("sendto()");
+		}
+		else
+		{
+			printf(" %-2d ", ttl);
+			for (tent = 0; tent < tentative; tent++)
+			{
+				if (recvfrom(receive_socket, recvbuf, MAX_PACKET, 0, (struct sockaddr*)&recept, &addrlen) == -1)
+				{
+					printf("* ");
+					recv_pack = (PacketICMP*) recvbuf;
+					printf("type=%d\ncode=%d\n", recv_pack->icmph.type, recv_pack->icmph.code);
+					if (logfile != NULL)
+					{
+						fprintf(logfile, " %-2d %-15s *\n", ttl, "*");
+					}
+				}
+				else
+				{
+					// way 1
+					rsaddr = inet_ntoa(recept.sin_addr);
+					// way 2
+					recv_pack = (PacketICMP*) recvbuf;
+					if (recv_pack->icmph.type != ICMP_TIME_EXCEEDED)
+					{
+						printf(" Reach destination\n");
+					}
+					printf("type=%d\ncode=%d\n", recv_pack->icmph.type, recv_pack->icmph.code);
+					//~ inet_ntop(AF_INET, &(iph->saddr), rsaddr, MAX_ADDRESS);
+					// end way
+					host = GetHostNameFromIP(rsaddr);
+					printf("%-15s %s", rsaddr, host);
+					if (logfile != NULL)
+					{
+						fprintf(logfile, " %-2d %-15s %s\n", ttl, rsaddr, host);
+					}
+					if (strcmp(dest, rsaddr)==0)
+					{
+						reach_dest = 1;
+					}
+					break;
+				}
+			}
+			printf("\n");
+		}
+		
+		close(send_socket);
+		close(receive_socket);
+		
+		if (reach_dest) return;
+    }
+}

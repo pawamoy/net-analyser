@@ -77,7 +77,8 @@ int main(int argc, char** argv)
                        i            = 0,
                        log_data     = 0;
     char              *ipstr        = NULL,
-                      *myip         = NULL;
+                      *myip         = NULL,
+                      probe         = 'i';
     FILE              *logfile      = NULL;
     //~ uid_t              uid;
 
@@ -112,6 +113,20 @@ int main(int argc, char** argv)
 		         strcmp(argv[i], "--send-timeout") == 0) snd_timeout = atoi(argv[i+1]);
 		else if (strcmp(argv[i], "-l") == 0 ||
 		         strcmp(argv[i], "--log") == 0)          log_data = 1;
+		else if (strcmp(argv[i], "-p") == 0 ||
+		         strcmp(argv[i], "--port") == 0)         portno = atoi(argv[i+1]);
+		else if (strcmp(argv[i], "-b") == 0 ||
+		         strcmp(argv[i], "--probe") == 0)        probe = tolower(argv[i+1][0]);
+	}
+	
+	switch (probe) {
+		case 'u':
+		case 'i':
+		case 't':
+			break;
+		default :
+			fprintf(stderr, "Invalid probe method: use with 'udp', 'icmp' or 'tcp'");
+			exit(-1);
 	}
 
 
@@ -148,18 +163,25 @@ int main(int argc, char** argv)
 
 	// init local addr structure
     my_addr.sin_family      = AF_INET;
-    my_addr.sin_port        = htons(portno+1);
+    my_addr.sin_port        = htons(portno);
     inet_aton(myip, &(my_addr.sin_addr));
     //~ my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     
     
     //-----------------------------------------------------//
-	// starting UDP loop
+	// starting loops
 	//-----------------------------------------------------//
 	int ttl_t[3] = {min_ttl, max_ttl, hops};
-	LoopUDP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
+	
+	printf("With UDP Probes\n");
+	//~ LoopUDP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
 
+	printf("With ICMP Probes\n");
+	LoopICMP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
 
+	printf("With TCP Probes\n");
+	//~ LoopTCP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
+	
 	//-----------------------------------------------------//
 	// close log file
 	//-----------------------------------------------------//

@@ -28,10 +28,10 @@
 #define MAX_PACKET 1024
 #define MAX_ADDRESS 128
 
-typedef struct packet_udp {
+typedef struct packet_icmp {
     struct iphdr iph;
-    struct udphdr udph;
-} PacketUDP;
+    struct icmphdr icmph;
+} PacketICMP;
 
 typedef int Socket;
 
@@ -74,30 +74,23 @@ Socket OpenRawSocket(char protocol);
  */
 Socket OpenDgramSocket(char protocol);
 
-//~ /**\brief Constructs an IP header
- //~ * \param iph Pointer to an IP Header structure
- //~ * \param ttl Time-to-live value
- //~ * \param source IP address source
- //~ * \param dest IP address destination
- //~ * \param protocol U:UDP, I:ICMP, T:TCP , default:TCP (same with lowercase)
- //~ */
-//~ void ConstructIPHeader(struct iphdr* iph,
-        //~ const unsigned int ttl,
-        //~ const char *source,
-        //~ const char *dest,
-        //~ const char protocol);
-//~ 
-//~ /**\brief Constructs an UDP header
- //~ * \param udph Pointer to an UDP header structure
- //~ */
-//~ void ConstructUDPHeader(struct udphdr* udph);
-//~ 
-//~ /**\brief Constructs a packet with UDP and IP headers
- //~ * \param buffer Address of a PacketUDP structure
- //~ * \param source Source IP address
- //~ * \param dest Destination IP address
- //~ */
-//~ void ConstructUDPPacket(PacketUDP* buffer, const char* source, const char* dest);
+/**\brief Constructs an IP header
+ * \param iph Pointer to an IP Header structure
+ * \param ttl Time-to-live value
+ * \param source IP address source
+ * \param dest IP address destination
+ * \param protocol U:UDP, I:ICMP, T:TCP , default:TCP (same with lowercase)
+ */
+void ConstructIPHeader(struct iphdr* iph,
+        const unsigned int ttl,
+        const char *source,
+        const char *dest,
+        const char protocol);
+
+/**\brief Constructs an ICMP header
+ * \param icmph Pointer to an ICMP header structure
+ */
+void ConstructICMPHeader(struct icmphdr* icmph);
 
 /**\brief Get IP from an hostname (ie. google.fr)
  * \param hostname String of domain name
@@ -122,7 +115,7 @@ int IsMyAddress(char* addr);
  */
 char* GetHostNameFromIP(const char* ip);
 
-/**\brief Traceroute with UDP
+/**\brief Traceroute with UDP probes
  * \param rcvt Receive timer
  * \param sndt Send timer
  * \param ttl_t Contains min_ttl, max_ttl, hops in this order
@@ -131,6 +124,17 @@ char* GetHostNameFromIP(const char* ip);
  * \param my_addr Source data
  */
 void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
+             struct sockaddr_in server, struct sockaddr_in my_addr);
+
+/**\brief Traceroute with ICMP probes
+ * \param rcvt Receive timer
+ * \param sndt Send timer
+ * \param ttl_t Contains min_ttl, max_ttl, hops in this order
+ * \param logfile FILE pointer (if NULL, don't log)
+ * \param server Destination data
+ * \param my_addr Source data
+ */
+void LoopICMP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
              struct sockaddr_in server, struct sockaddr_in my_addr);
 
 #endif // __TRACEROUTE_H
