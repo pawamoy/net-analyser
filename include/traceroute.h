@@ -100,9 +100,8 @@ void ConstructIPHeader(struct iphdr* iph,
 
 /**\brief Constructs an ICMP header
  * \param icmph Pointer to an ICMP header structure
- * \param seq Sequence number
  */
-void ConstructICMPHeader(struct icmphdr* icmph, int seq);
+void ConstructICMPHeader(struct icmphdr* icmph);
 
 /**\brief Constructs an TCP header
  * \param icmph Pointer to an TCP header structure
