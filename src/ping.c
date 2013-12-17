@@ -16,7 +16,8 @@
 #include <netdb.h>
 #include <errno.h>
 #include <unistd.h>
-#include "../include/traceroute.c"
+//#include "../include/ping.h"
+//#include "../include/traceroute.h"
 //#include <netinet/udp.h>
 //#include <netinet/tcp.h>
 
@@ -139,4 +140,70 @@ int main(int argc, char** argv)
     free (paquet);
 
     return (EXIT_SUCCESS);
+}
+
+char* GetIPFromHostname(const char* hostname)
+{
+    struct hostent *he;
+    struct in_addr **addr_list;
+    int i;
+         
+    if ( (he = gethostbyname( hostname ) ) == NULL)
+    {
+        // get the host info
+        herror("gethostbyname()");
+        exit(-1);
+    }
+ 
+    addr_list = (struct in_addr **) he->h_addr_list;
+     
+    for(i = 0; addr_list[i] != NULL; i++)
+    {
+        //Return the first one;
+        return inet_ntoa(*addr_list[i]);
+    }
+     
+    exit(-1);
+}
+
+char* GetMyIP()
+{
+	struct ifaddrs *ifaddr, *ifa;
+	int family, s;
+	char* host = (char*)malloc(128*sizeof(char));
+
+	if (getifaddrs(&ifaddr) == -1) {
+	   perror("getifaddrs");
+	   exit(EXIT_FAILURE);
+	}
+
+	/* Walk through linked list, maintaining head pointer so we
+	  can free list later */
+
+	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+	   if (ifa->ifa_addr == NULL)
+		   continue;
+
+	   family = ifa->ifa_addr->sa_family;
+
+	   /* For an AF_INET* interface address, display the address */
+
+	   if (family == AF_INET || family == AF_INET6) {
+		   s = getnameinfo(ifa->ifa_addr,
+				   (family == AF_INET) ? sizeof(struct sockaddr_in) :
+										 sizeof(struct sockaddr_in6),
+				   host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+		   if (s != 0) {
+			   printf("getnameinfo() failed: %s\n", gai_strerror(s));
+			   exit(EXIT_FAILURE);
+		   }
+		   if (IsMyAddress(host) == 1)
+		   {
+				break;
+		   }
+		}
+	}
+
+	freeifaddrs(ifaddr);
+	return host;
 }
