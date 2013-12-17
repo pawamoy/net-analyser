@@ -33,6 +33,11 @@ typedef struct packet_icmp {
     struct icmphdr icmph;
 } PacketICMP;
 
+typedef struct packet_tcp {
+    struct iphdr iph;
+    struct tcphdr tcph;
+} PacketTCP;
+
 typedef int Socket;
 
 /**\brief Show usage of the program
@@ -92,6 +97,11 @@ void ConstructIPHeader(struct iphdr* iph,
  */
 void ConstructICMPHeader(struct icmphdr* icmph);
 
+/**\brief Constructs an TCP header
+ * \param icmph Pointer to an TCP header structure
+ */
+void ConstructTCPHeader(struct tcphdr *tcph);
+
 /**\brief Get IP from an hostname (ie. google.fr)
  * \param hostname String of domain name
  * \return NULL on error, a pointer to char
@@ -136,5 +146,17 @@ void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
  */
 void LoopICMP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
              struct sockaddr_in server, struct sockaddr_in my_addr);
+             
+/**\brief Traceroute with TCP probes
+ * \param rcvt Receive timer
+ * \param sndt Send timer
+ * \param ttl_t Contains min_ttl, max_ttl, hops in this order
+ * \param logfile FILE pointer (if NULL, don't log)
+ * \param server Destination data
+ * \param my_addr Source data
+ */
+void LoopTCP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
+             struct sockaddr_in server, struct sockaddr_in my_addr);
+                  
 
 #endif // __TRACEROUTE_H

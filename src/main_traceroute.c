@@ -177,10 +177,10 @@ int main(int argc, char** argv)
 	//~ LoopUDP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
 
 	printf("With ICMP Probes\n");
-	LoopICMP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
+	//LoopICMP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
 
 	printf("With TCP Probes\n");
-	//~ LoopTCP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
+	LoopTCP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
 	
 	//-----------------------------------------------------//
 	// close log file
