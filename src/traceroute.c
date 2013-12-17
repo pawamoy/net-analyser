@@ -8,7 +8,7 @@
 
 void Usage()
 {
-    printf("USAGE: traceroute servername [-h HOPS] [-n MIN_TTL] [-m MAX_TTL] [-r SEC] [-s SEC]\n");
+    printf("USAGE: traceroute servername [-b icmp|udp|tcp] [-p PORT] [-n MIN_TTL] [-m MAX_TTL] [-h HOPS] [-r SEC] [-s SEC]\n");
     exit(-1);
 }
 
@@ -275,7 +275,7 @@ char* GetHostNameFromIP(const char* ip)
 	return host;
 }
 
-void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
+void LoopUDP(int rcvt, int sndt, int ttl_t[4], FILE* logfile,
              struct sockaddr_in server, struct sockaddr_in my_addr)
 {
 	struct timeval r_timeout = { rcvt, 0 };
@@ -293,15 +293,15 @@ void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
     strcpy(dest, inet_ntoa(server.sin_addr));
     
     int reach_dest = 0;
-    int tent, tentative = 3;
     int received = 0;
+    int att, attempt = ttl_t[3];
     int ttl, min_ttl = ttl_t[0], max_ttl = ttl_t[1], hops = ttl_t[2];
     
     for (ttl = min_ttl; ttl <= max_ttl; ttl += hops)
     {
 		printf(" %-2d ", ttl);
 		fflush(stdout);
-		for (tent = 0; tent < tentative; tent++)
+		for (att = 0; att < attempt; att++)
 		{
 			send_socket    = OpenDgramSocket('u');
 			receive_socket = OpenRawSocket('i');
@@ -358,7 +358,7 @@ void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
 	}
 }
 
-void LoopICMP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
+void LoopICMP(int rcvt, int sndt, int ttl_t[4], FILE* logfile,
              struct sockaddr_in server, struct sockaddr_in my_addr)
 {
 	struct timeval r_timeout = { rcvt, 0 };
@@ -380,14 +380,14 @@ void LoopICMP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
     
     int reach_dest = 0;
     int received = 0;
-    int tent, tentative = 3;
+    int att, attempt = ttl_t[3];
     int ttl, min_ttl = ttl_t[0], max_ttl = ttl_t[1], hops = ttl_t[2];
 	
     for (ttl = min_ttl; ttl <= max_ttl; ttl += hops)
     {
 		printf(" %-2d ", ttl);
 		fflush(stdout);
-		for (tent = 0; tent < tentative; tent++)
+		for (att = 0; att < attempt; att++)
 		{
 			send_socket    = OpenRawSocket('i');
 			receive_socket = OpenRawSocket('i');
@@ -447,7 +447,7 @@ void LoopICMP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
     }
 }
 
-void LoopTCP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
+void LoopTCP(int rcvt, int sndt, int ttl_t[4], FILE* logfile,
              struct sockaddr_in server, struct sockaddr_in my_addr)
 {
 	struct timeval r_timeout = { rcvt, 0 };
@@ -467,7 +467,7 @@ void LoopTCP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
     strcpy(source, inet_ntoa(my_addr.sin_addr));
     
     int reach_dest = 0;
-    int tent, tentative = 3;
+    int att, attempt = ttl_t[3];
     int ttl, min_ttl = ttl_t[0], max_ttl = ttl_t[1], hops = ttl_t[2];
 	
     PacketTCP pack_tcp;
@@ -497,7 +497,7 @@ void LoopTCP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
 		else
 		{
 			printf(" %-2d ", ttl);
-			for (tent = 0; tent < tentative; tent++)
+			for (att = 0; att < attempt; att++)
 			{
 				if (recvfrom(receive_socket, recvbuf, MAX_PACKET, 0, (struct sockaddr*)&recept, &addrlen) == -1)
 				{
