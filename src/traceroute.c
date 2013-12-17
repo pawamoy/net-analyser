@@ -21,7 +21,6 @@ int SetTTL(Socket s, int ttl)
         perror("Cannot set TTL value of socket");
         return 0;
     }
-
     return 1;
 }
 
@@ -32,7 +31,6 @@ int SetRCVTimeOut(Socket s, struct timeval to)
 		perror("setsockopt receive timeout");
 		return 0;
 	}
-	
 	return 1;
 }
 
@@ -43,7 +41,18 @@ int SetSNDTimeOut(Socket s, struct timeval to)
 		perror("setsockopt receive timeout");
 		return 0;
 	}
-	
+	return 1;
+}
+
+int SetHDRINCL(Socket s)
+{
+	int tmp = 1;
+	int* val = &tmp;
+	if (setsockopt (s, IPPROTO_IP, IP_HDRINCL, val, sizeof(tmp)) < 0)
+	{
+		perror("setsockopt HDRINCL");
+		return 0;
+	}
 	return 1;
 }
 
@@ -137,11 +146,14 @@ void ConstructIPHeader(struct iphdr* iph,
     //~ return sizeof(*iph);
 }
 
-void ConstructICMPHeader(struct icmphdr* icmph)
+void ConstructICMPHeader(struct icmphdr* icmph, int seq)
 {
+	memset(icmph, 0, sizeof(struct icmphdr));
     icmph->type = ICMP_ECHO;
+    icmph->un.echo.id = getpid();
+    icmph->un.echo.sequence = seq;
     icmph->code = 0;
-    icmph->checksum = 0; // skip
+    //~ icmph->checksum = 0; // skip
 }
 
 /* not used
@@ -419,7 +431,8 @@ void LoopICMP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
     
     struct sockaddr_in recept = { 0 };
     
-    char recvbuf[MAX_PACKET];
+    char recvbuf[MAX_PACKET] = { 0 };
+    char pack_icmp[MAX_PACKET] = { 0 };
     char *host = NULL, *rsaddr = NULL;
     
     char dest[MAX_ADDRESS];
@@ -427,13 +440,16 @@ void LoopICMP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
     char source[MAX_ADDRESS];
     strcpy(source, inet_ntoa(my_addr.sin_addr));
     
+    int seq = 0;
     int reach_dest = 0;
     int tent, tentative = 3;
+    int ip_icmp_len = sizeof(struct iphdr) + sizeof(struct icmphdr);
     int ttl, min_ttl = ttl_t[0], max_ttl = ttl_t[1], hops = ttl_t[2];
 	
-    PacketICMP pack_icmp, *recv_pack;      
+    //~ struct iphdr* iph = NULL;
+    struct icmphdr* icmph = NULL;      
     
-    for (ttl = min_ttl; ttl <= max_ttl; ttl += hops)
+    for (ttl = min_ttl; ttl <= max_ttl; ttl += hops, seq++)
     {
 		send_socket    = OpenRawSocket('i');
 		receive_socket = OpenRawSocket('i');
@@ -444,13 +460,14 @@ void LoopICMP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
 			exit(-1);
 		}
 		
-		ConstructIPHeader(&(pack_icmp.iph), ttl, source, dest, 'i');
-		ConstructICMPHeader(&(pack_icmp.icmph));
+		ConstructIPHeader((struct iphdr*)pack_icmp, ttl, source, dest, 'i');
+		ConstructICMPHeader((struct icmphdr*)(pack_icmp+sizeof(struct iphdr)), seq);
 		
+		if ( ! SetHDRINCL(send_socket))                  exit(-1);
 		if ( ! SetSNDTimeOut(send_socket, s_timeout))    exit(-1);
 		if ( ! SetRCVTimeOut(receive_socket, r_timeout)) exit(-1);
 
-        if (sendto(send_socket, &pack_icmp, sizeof(pack_icmp), 0, (struct sockaddr*) &server, addrlen) == -1)
+        if (sendto(send_socket, pack_icmp, ip_icmp_len, 0, (struct sockaddr*) &server, addrlen) == -1)
         {
             perror("sendto()");
 		}
@@ -461,9 +478,11 @@ void LoopICMP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
 			{
 				if (recvfrom(receive_socket, recvbuf, MAX_PACKET, 0, (struct sockaddr*)&recept, &addrlen) == -1)
 				{
-					printf("* ");
-					recv_pack = (PacketICMP*) recvbuf;
-					printf("type=%d\ncode=%d\n", recv_pack->icmph.type, recv_pack->icmph.code);
+					icmph = (struct icmphdr*) (recvbuf + sizeof(struct iphdr));
+					if (icmph->type == ICMP_TIME_EXCEEDED)
+						printf("* ");
+					else if (icmph->type == ICMP_DEST_UNREACH)
+						printf("Dest reached\n");
 					if (logfile != NULL)
 					{
 						fprintf(logfile, " %-2d %-15s *\n", ttl, "*");
@@ -471,17 +490,7 @@ void LoopICMP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
 				}
 				else
 				{
-					// way 1
 					rsaddr = inet_ntoa(recept.sin_addr);
-					// way 2
-					recv_pack = (PacketICMP*) recvbuf;
-					if (recv_pack->icmph.type != ICMP_TIME_EXCEEDED)
-					{
-						printf(" Reach destination\n");
-					}
-					printf("type=%d\ncode=%d\n", recv_pack->icmph.type, recv_pack->icmph.code);
-					//~ inet_ntop(AF_INET, &(iph->saddr), rsaddr, MAX_ADDRESS);
-					// end way
 					host = GetHostNameFromIP(rsaddr);
 					printf("%-15s %s", rsaddr, host);
 					if (logfile != NULL)

@@ -60,6 +60,12 @@ int SetRCVTimeOut(Socket s, struct timeval to);
  */
 int SetSNDTimeOut(Socket s, struct timeval to);
 
+/**\brief Set HDRINCL to true (headers included) 
+ * \param s socket identifier
+ * \return 0(false) on failure, 1(true) on success
+ */
+int SetHDRINCL(Socket s);
+
 /**\brief Opens a raw socket.
  * May print an error, and then exit with code 1
  * \param protocol I:ICMP, U:UDP, T:TCP, default:TCP (same with lowercase)
@@ -89,8 +95,9 @@ void ConstructIPHeader(struct iphdr* iph,
 
 /**\brief Constructs an ICMP header
  * \param icmph Pointer to an ICMP header structure
+ * \param seq Sequence number
  */
-void ConstructICMPHeader(struct icmphdr* icmph);
+void ConstructICMPHeader(struct icmphdr* icmph, int seq);
 
 /**\brief Get IP from an hostname (ie. google.fr)
  * \param hostname String of domain name
