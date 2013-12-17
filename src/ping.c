@@ -4,24 +4,13 @@
  * \date December 10, 2013, 10:37 AM
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/ip_icmp.h>
-#include <netinet/ip.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>  
-#include <netdb.h>
-#include <errno.h>
-#include <unistd.h>
-#include "../include/traceroute.c"
+#include "../include/ping.h"
 //#include <netinet/udp.h>
 //#include <netinet/tcp.h>
 
 #define LONGHDR_IP 20
 #define LONGHDR_ICMP 8
+#define IP_MAXPACKET 1024
 
 /*
  * TODO:
@@ -31,18 +20,107 @@
  *	- être capable d’envoyer des sondes ICMP, UDP et TCP et "interpréter les différents type de messages reçus"
  */
 
+//<--- FUNCTIONS --->
+char* GetIPFromHostname(const char* hostname)
+{
+    struct hostent *he;
+    struct in_addr **addr_list;
+    int i;
+         
+    if ( (he = gethostbyname( hostname ) ) == NULL)
+    {
+        // get the host info
+        herror("gethostbyname()");
+        exit(-1);
+    }
+ 
+    addr_list = (struct in_addr **) he->h_addr_list;
+     
+    for(i = 0; addr_list[i] != NULL; i++)
+    {
+        //Return the first one;
+        return inet_ntoa(*addr_list[i]);
+    }
+     
+    exit(-1);
+}
+
+char* GetMyIP()
+{
+	struct ifaddrs *ifaddr, *ifa;
+	int family, s;
+	char* host = (char*)malloc(128*sizeof(char));
+
+	if (getifaddrs(&ifaddr) == -1) {
+	   perror("getifaddrs");
+	   exit(EXIT_FAILURE);
+	}
+
+	/* Walk through linked list, maintaining head pointer so we
+	  can free list later */
+
+	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+	   if (ifa->ifa_addr == NULL)
+		   continue;
+
+	   family = ifa->ifa_addr->sa_family;
+
+	   /* For an AF_INET* interface address, display the address */
+
+	   if (family == AF_INET || family == AF_INET6) {
+		   s = getnameinfo(ifa->ifa_addr,
+				   (family == AF_INET) ? sizeof(struct sockaddr_in) :
+										 sizeof(struct sockaddr_in6),
+				   host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+		   if (s != 0) {
+			   printf("getnameinfo() failed: %s\n", gai_strerror(s));
+			   exit(EXIT_FAILURE);
+		   }
+		   if (IsMyAddress(host) == 1)
+		   {
+				break;
+		   }
+		}
+	}
+
+	freeifaddrs(ifaddr);
+	return host;
+}
+
+int IsMyAddress(char* addr)
+{
+	if (strcmp(addr, "127.0.0.1") == 0)
+	{
+		return 0;
+	}
+	
+	if (strlen(addr) >= 8)
+	{
+		if (isdigit(addr[0]) &&
+			isdigit(addr[1]) &&
+			isdigit(addr[2]) &&
+			addr[3] == '.')
+		{
+			return 1;
+		}
+	}
+	
+	return 0;
+}
+
 void Usage(void)
 {
     printf("USAGE: ping servername\n");
     exit(-1);
 }
 
+//<--- MAIN --->
 int main(int argc, char** argv)
 {
     int *ip_flags, sd;
     char *cible, *ipstr = NULL, *myip = NULL;
-    struct ip hdrip;
-    struct icmp hdricmp;
+    struct iphdr hdrip;
+    struct icmphdr hdricmp;
     uint8_t *paquet;
     struct addrinfo hints, *resolv;
     struct sockaddr_in *server, my_addr;
@@ -84,43 +162,43 @@ int main(int argc, char** argv)
     printf("Domaine: %s\nAddresse: %s\n\n", argv[1], ipstr);
 
     //Entête IP
-    hdrip.ip_hl = LONGHDR_IP/sizeof(uint32_t);
-    hdrip.ip_v = 4;
-    hdrip.ip_tos = 0;
-    hdrip.ip_len = htons(LONGHDR_IP+LONGHDR_ICMP);
-    hdrip.ip_id = htons(0);
+    hdrip.ihl = LONGHDR_IP/sizeof(uint32_t);
+    hdrip.version = 4;
+    hdrip.tos = 0;
+    hdrip.tot_len = htons(LONGHDR_IP+LONGHDR_ICMP);
+    hdrip.id = htons(0);
     ip_flags[0] = 0;
     ip_flags[1] = 0;
     ip_flags[2] = 0;
     ip_flags[3] = 0;
-    hdrip.ip_off = htons((ip_flags[0]<<15)+(ip_flags[1]<<14)+(ip_flags[2]<<13)+ip_flags[3]);
-    hdrip.ip_ttl = 255;
-    hdrip.ip_p = IPPROTO_ICMP;
+    hdrip.frag_off = htons((ip_flags[0]<<15)+(ip_flags[1]<<14)+(ip_flags[2]<<13)+ip_flags[3]);
+    hdrip.ttl = 255;
+    hdrip.protocol = IPPROTO_ICMP;
 
     //checksum entête IP
-    hdrip.ip_sum = 0;
-    hdrip.ip_sum = checksum((uint16_t *)&hdrip,LONGHDR_IP);
+    hdrip.check = 0;
+    //hdrip.check = checksum((uint16_t *)&hdrip,LONGHDR_IP);
 
     //Entête ICMP
-    hdricmp.icmp_type = ICMP_ECHO;
-    hdricmp.icmp_code = 0;
-    hdricmp.icmp_id = htons(4444);
-    hdricmp.icmp_seq = htons(0);
-    hdricmp.icmp_cksum = 0;
+    hdricmp.type = ICMP_ECHO;
+    hdricmp.code = 0;
+    hdricmp.un.echo.id = htons(4444);
+    hdricmp.un.echo.sequence = htons(0);
+    hdricmp.checksum = 0;
 
-    memcpy(paquet, &hdricmp, LONGHDR_IP);
-    memcpy((paquet+LONGHDR_IP), &hdricmp, LONGHDR_ICMP);
+    //memcpy(paquet, &hdricmp, LONGHDR_IP);
+    //memcpy((paquet+LONGHDR_IP), &hdricmp, LONGHDR_ICMP);
 
     //checksum entête ICMP
-    hdricmp.icmp_cksum = checksum((uint16_t *)(paquet+LONGHDR_IP), LONGHDR_ICMP);
-    memcpy((paquet+LONGHDR_IP), &hdricmp, LONGHDR_ICMP);
+    //hdricmp.checksum = checksum((uint16_t *)(paquet+LONGHDR_IP), LONGHDR_ICMP);
+    //memcpy((paquet+LONGHDR_IP), &hdricmp, LONGHDR_ICMP);
 
     //préparation de l'envoi du paquet
     memset (&my_addr, 0, sizeof (struct sockaddr_in));
     my_addr.sin_family = AF_INET;
-    my_addr.sin_addr.s_addr = hdrip.ip_dst.s_addr;
+    my_addr.sin_addr.s_addr = hdrip.saddr;//hdrip.dst.s_addr;
 
-    sd = socket (AF_INET, SOCK_RAW, IPPROTO_RAW);
+    sd = socket (AF_INET, SOCK_RAW, IPPROTO_ICMP); //IPPROTO_RAW
     //envoi du paquet
     if (sendto(sd, paquet, LONGHDR_IP+LONGHDR_ICMP, 0, (struct sockaddr *)&my_addr, sizeof(struct sockaddr))<0)
     {
