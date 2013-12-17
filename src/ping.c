@@ -118,12 +118,12 @@ void Usage(void)
 int main(int argc, char** argv)
 {
     int *ip_flags, sd;
-    char *cible, *ipstr = NULL, *myip = NULL;
+    char /**cible,*/ *ipstr = NULL, *myip = NULL;
     struct iphdr hdrip;
     struct icmphdr hdricmp;
     uint8_t *paquet;
-    struct addrinfo hints, *resolv;
-    struct sockaddr_in *server, my_addr;
+    struct addrinfo hints/*, *resolv*/;
+    struct sockaddr_in /**server,*/ my_addr;
 
 	//vérification arg
     if (argc != 2) Usage();   
@@ -136,8 +136,8 @@ int main(int argc, char** argv)
     }
 
 	//allocation mémoire des diff. var
-	cible = (char *)malloc(40*sizeof(char));
-        memset(cible, 0, 40*sizeof(char));
+	//cible = (char *)malloc(40*sizeof(char));
+        //memset(cible, 0, 40*sizeof(char));
 	ipstr = (char *)malloc((INET_ADDRSTRLEN*sizeof(char)));
 	memset(ipstr, 0, (INET_ADDRSTRLEN*sizeof(char)));
 	myip = (char *)malloc((INET_ADDRSTRLEN*sizeof(char)));
@@ -204,13 +204,15 @@ int main(int argc, char** argv)
     {
       perror ("échec sendto()");
       exit(EXIT_FAILURE);
+    } else {
+	printf("Envoi du paquet ICMP réussi\n");
     }
 
     //fermeture socket
     close (sd);
 	
     //free mémoire
-    free (cible);
+    //free (cible);
     free (myip);
     free (ipstr);
     free (ip_flags);
