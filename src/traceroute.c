@@ -144,69 +144,25 @@ void ConstructICMPHeader(struct icmphdr* icmph)
     icmph->checksum = 0; // skip
 }
 
-/* not used
-char *GetIPFromHostname(const char *hostname)
+void ConstructTCPHeader(struct tcphdr *tcph) 
 {
-    struct addrinfo hints, *p, *pbak, *res;
-	struct sockaddr_in *ipv4;
-    void *addr;
-    char *ipstr = malloc(sizeof (char)*INET6_ADDRSTRLEN);
-    int status;
-    //~ int ret;
-
-    if (ipstr == NULL)
-    {
-        perror("GetIPFromHostname(): Couldn't init ipstr");
-        return NULL;
-    }
-
-    memset(&hints, 0, sizeof hints); // make sure the struct is empty
-    hints.ai_family = AF_INET; // don't care IPv4 or IPv6
-    hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
-    hints.ai_flags = AI_PASSIVE; // fill in my IP for me
-
-    if ((status = getaddrinfo(hostname, "80", &hints, &res)) != 0)
-    {
-        fprintf(stderr, "GetIPFromHostname(): getaddrinfo error: %s\n", gai_strerror(status));
-        return NULL;
-    }
-    
-    for (p = res; p != NULL; p = p->ai_next)
-    {
-        // get the pointer to the address itself,
-        // different fields in IPv4 and IPv6:
-        ipv4 = (struct sockaddr_in *) p->ai_addr;
-        addr = &(ipv4->sin_addr);
-        pbak = p;
-	}
-	
-	// convert the IP to a string and print it:
-	inet_ntop(pbak->ai_family, addr, ipstr, sizeof (char)*INET6_ADDRSTRLEN);
-	//~ printf("%s\n", ipstr);
-
-    // get addr from command line and convert it
-    //~ if ((ret = inet_pton(AF_INET, ipstr, ipstr)) != 1)
-    //~ {
-		//~ switch(ret)
-		//~ {
-			//~ case 0 :
-				//~ fprintf(stderr, "inet_pton(): unvalid IPv4 address\n");
-				//~ break;
-			//~ case -1: 
-			//~ default:
-				//~ fprintf(stderr, "inet_pton(): unvalid address family\n");
-				//~ break;
-		//~ }
-        //~ 
-        //~ perror("Cannot get addr from command line and convert it");
-        //~ exit(EXIT_FAILURE);
-    //~ }
-
-    freeaddrinfo(res);
-
-    return ipstr;
+    //TCP Header
+    tcph->source = htons (1234);
+    tcph->dest = htons (80);
+    tcph->seq = 0;
+    tcph->ack_seq = 0;
+    tcph->doff = 5;      /* first and only tcp segment */
+    tcph->fin=0;
+    tcph->syn=1;
+    tcph->rst=0;
+    tcph->psh=0;
+    tcph->ack=0;
+    tcph->urg=0;
+    tcph->window = htons (5840); /* maximum allowed window size */
+    tcph->check = 0;/* if you set a checksum to zero, your kernel's IP stack
+                should fill in the correct checksum during transmission */
+    tcph->urg_ptr = 0;
 }
-* */
  
 char* GetIPFromHostname(const char* hostname)
 {
@@ -504,3 +460,104 @@ void LoopICMP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
 		if (reach_dest) return;
     }
 }
+
+void LoopTCP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
+             struct sockaddr_in server, struct sockaddr_in my_addr)
+{
+	struct timeval r_timeout = { rcvt, 0 };
+    struct timeval s_timeout = { sndt, 0 };
+    
+    Socket send_socket, receive_socket;
+    socklen_t addrlen = sizeof (struct sockaddr_in);
+    
+    struct sockaddr_in recept = { 0 };
+    
+    char recvbuf[MAX_PACKET];
+    char *host = NULL, *rsaddr = NULL;
+    
+    char dest[MAX_ADDRESS];
+    strcpy(dest, inet_ntoa(server.sin_addr));
+    char source[MAX_ADDRESS];
+    strcpy(source, inet_ntoa(my_addr.sin_addr));
+    
+    int reach_dest = 0;
+    int tent, tentative = 3;
+    int ttl, min_ttl = ttl_t[0], max_ttl = ttl_t[1], hops = ttl_t[2];
+	
+    PacketTCP pack_tcp;
+    // *recv_pack;      
+    
+    for (ttl = min_ttl; ttl <= max_ttl; ttl += hops)
+    {
+		send_socket    = OpenRawSocket('t');
+		receive_socket = OpenRawSocket('t');
+		
+		if (bind(receive_socket, (struct sockaddr*)&my_addr, addrlen) == -1)
+		{
+			perror("bind receive socket");
+			exit(-1);
+		}
+		
+		ConstructIPHeader(&(pack_tcp.iph), ttl, source, dest, 't');
+		ConstructTCPHeader(&(pack_tcp.tcph));
+		
+		if ( ! SetSNDTimeOut(send_socket, s_timeout))    exit(-1);
+		if ( ! SetRCVTimeOut(receive_socket, r_timeout)) exit(-1);
+
+        if (sendto(send_socket, &pack_tcp, sizeof(pack_tcp), 0, (struct sockaddr*) &server, addrlen) == -1)
+        {
+            perror("sendto()");
+		}
+		else
+		{
+			printf(" %-2d ", ttl);
+			for (tent = 0; tent < tentative; tent++)
+			{
+				if (recvfrom(receive_socket, recvbuf, MAX_PACKET, 0, (struct sockaddr*)&recept, &addrlen) == -1)
+				{
+					printf("* ");
+					//recv_pack = (PacketTCP*) recvbuf;
+					//printf("type=%d\ncode=%d\n", recv_pack->icmph.type, recv_pack->icmph.code);
+					if (logfile != NULL)
+					{
+						fprintf(logfile, " %-2d %-15s *\n", ttl, "*");
+					}
+				}
+				else
+				{
+					// way 1
+					rsaddr = inet_ntoa(recept.sin_addr);
+                    /*
+					// way 2
+					recv_pack = (PacketTCP*) recvbuf;
+					if (recv_pack->icmph.type != ICMP_TIME_EXCEEDED)
+					{
+						printf(" Reach destination\n");
+					}
+					printf("type=%d\ncode=%d\n", recv_pack->icmph.type, recv_pack->icmph.code);
+					//~ inet_ntop(AF_INET, &(iph->saddr), rsaddr, MAX_ADDRESS);
+                    * */
+					// end way
+					host = GetHostNameFromIP(rsaddr);
+					printf("%-15s %s", rsaddr, host);
+					if (logfile != NULL)
+					{
+						fprintf(logfile, " %-2d %-15s %s\n", ttl, rsaddr, host);
+					}
+					if (strcmp(dest, rsaddr)==0)
+					{
+						reach_dest = 1;
+					}
+					break;
+				}
+			}
+			printf("\n");
+		}
+		
+		close(send_socket);
+		close(receive_socket);
+		
+		if (reach_dest) return;
+    }
+}
+
