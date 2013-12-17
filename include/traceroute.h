@@ -134,34 +134,34 @@ char* GetHostNameFromIP(const char* ip);
 /**\brief Traceroute with UDP probes
  * \param rcvt Receive timer
  * \param sndt Send timer
- * \param ttl_t Contains min_ttl, max_ttl, hops in this order
+ * \param ttl_t Contains min_ttl, max_ttl, hops and attempts in this order
  * \param logfile FILE pointer (if NULL, don't log)
  * \param server Destination data
  * \param my_addr Source data
  */
-void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
+void LoopUDP(int rcvt, int sndt, int ttl_t[4], FILE* logfile,
              struct sockaddr_in server, struct sockaddr_in my_addr);
 
 /**\brief Traceroute with ICMP probes
  * \param rcvt Receive timer
  * \param sndt Send timer
- * \param ttl_t Contains min_ttl, max_ttl, hops in this order
+ * \param ttl_t Contains min_ttl, max_ttl, hops and attempts in this order
  * \param logfile FILE pointer (if NULL, don't log)
  * \param server Destination data
  * \param my_addr Source data
  */
-void LoopICMP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
+void LoopICMP(int rcvt, int sndt, int ttl_t[4], FILE* logfile,
              struct sockaddr_in server, struct sockaddr_in my_addr);
              
 /**\brief Traceroute with TCP probes
  * \param rcvt Receive timer
  * \param sndt Send timer
- * \param ttl_t Contains min_ttl, max_ttl, hops in this order
+ * \param ttl_t Contains min_ttl, max_ttl, hops and attempts in this order
  * \param logfile FILE pointer (if NULL, don't log)
  * \param server Destination data
  * \param my_addr Source data
  */
-void LoopTCP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
+void LoopTCP(int rcvt, int sndt, int ttl_t[4], FILE* logfile,
              struct sockaddr_in server, struct sockaddr_in my_addr);
                   
 
