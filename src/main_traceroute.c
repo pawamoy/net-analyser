@@ -99,7 +99,7 @@ int main(int argc, char** argv)
     }
     
     // argument analysis
-    for (i=1; i<argc; i++)
+    for (i=2; i<argc; i+=2)
     {
 		     if (strcmp(argv[i], "-m") == 0 ||
 		         strcmp(argv[i], "--maxttl") == 0)       max_ttl = atoi(argv[i+1]);
@@ -173,15 +173,19 @@ int main(int argc, char** argv)
 	//-----------------------------------------------------//
 	int ttl_t[3] = {min_ttl, max_ttl, hops};
 	
-	printf("With UDP Probes\n");
-	//~ LoopUDP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
-
-	printf("With ICMP Probes\n");
-	//LoopICMP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
-
-	printf("With TCP Probes\n");
-	LoopTCP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
-	
+	switch (probe) {
+		case 'u':
+			LoopUDP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
+			break;
+		case 'i':
+			LoopICMP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
+			break;
+		case 't':
+			LoopTCP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
+			break;
+		default: 
+			break;
+	}
 	//-----------------------------------------------------//
 	// close log file
 	//-----------------------------------------------------//
