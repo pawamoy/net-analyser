@@ -341,6 +341,10 @@ void LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
 						exit(-1);
 					break;
 				case 't':
+					ConstructIPHeader((struct iphdr*)packet, ttl, source, dest, 't');
+					ConstructTCPHeader((struct tcphdr*)(packet+sizeof(struct iphdr)));
+					if ( ! SetHDRINCL(send_socket))
+						exit(-1);
 					break;
 			}
 					
@@ -389,104 +393,3 @@ void LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
 		if (reach_dest) return;
 	}
 }
-
-void LoopTCP(int rcvt, int sndt, int ttl_t[4], FILE* logfile,
-             struct sockaddr_in server, struct sockaddr_in my_addr)
-{
-	struct timeval r_timeout = { rcvt, 0 };
-    struct timeval s_timeout = { sndt, 0 };
-    
-    Socket send_socket, receive_socket;
-    socklen_t addrlen = sizeof (struct sockaddr_in);
-    
-    struct sockaddr_in recept = { 0 };
-    
-    char recvbuf[MAX_PACKET];
-    char *host = NULL, *rsaddr = NULL;
-    
-    char dest[MAX_ADDRESS];
-    strcpy(dest, inet_ntoa(server.sin_addr));
-    char source[MAX_ADDRESS];
-    strcpy(source, inet_ntoa(my_addr.sin_addr));
-    
-    int reach_dest = 0;
-    int att, attempt = ttl_t[3];
-    int ttl, min_ttl = ttl_t[0], max_ttl = ttl_t[1], hops = ttl_t[2];
-	
-    PacketTCP pack_tcp;
-    // *recv_pack;      
-    
-    for (ttl = min_ttl; ttl <= max_ttl; ttl += hops)
-    {
-		send_socket    = OpenRawSocket('t');
-		receive_socket = OpenRawSocket('t');
-		
-		if (bind(receive_socket, (struct sockaddr*)&my_addr, addrlen) == -1)
-		{
-			perror("bind receive socket");
-			exit(-1);
-		}
-		
-		ConstructIPHeader(&(pack_tcp.iph), ttl, source, dest, 't');
-		ConstructTCPHeader(&(pack_tcp.tcph));
-		
-		if ( ! SetSNDTimeOut(send_socket, s_timeout))    exit(-1);
-		if ( ! SetRCVTimeOut(receive_socket, r_timeout)) exit(-1);
-
-        if (sendto(send_socket, &pack_tcp, sizeof(pack_tcp), 0, (struct sockaddr*) &server, addrlen) == -1)
-        {
-            perror("sendto()");
-		}
-		else
-		{
-			printf("%2d  ", ttl);
-			for (att = 0; att < attempt; att++)
-			{
-				if (recvfrom(receive_socket, recvbuf, MAX_PACKET, 0, (struct sockaddr*)&recept, &addrlen) == -1)
-				{
-					printf("* ");
-					//recv_pack = (PacketTCP*) recvbuf;
-					//printf("type=%d\ncode=%d\n", recv_pack->icmph.type, recv_pack->icmph.code);
-					if (logfile != NULL)
-					{
-						fprintf(logfile, " %-2d %-15s *\n", ttl, "*");
-					}
-				}
-				else
-				{
-					// way 1
-					rsaddr = inet_ntoa(recept.sin_addr);
-                    /*
-					// way 2
-					recv_pack = (PacketTCP*) recvbuf;
-					if (recv_pack->icmph.type != ICMP_TIME_EXCEEDED)
-					{
-						printf(" Reach destination\n");
-					}
-					printf("type=%d\ncode=%d\n", recv_pack->icmph.type, recv_pack->icmph.code);
-					//~ inet_ntop(AF_INET, &(iph->saddr), rsaddr, MAX_ADDRESS);
-                    * */
-					// end way
-					host = GetHostNameFromIP(rsaddr);
-					printf("%-15s %s", rsaddr, host);
-					if (logfile != NULL)
-					{
-						fprintf(logfile, " %-2d %-15s %s\n", ttl, rsaddr, host);
-					}
-					if (strcmp(dest, rsaddr)==0)
-					{
-						reach_dest = 1;
-					}
-					break;
-				}
-			}
-			printf("\n");
-		}
-		
-		close(send_socket);
-		close(receive_socket);
-		
-		if (reach_dest) return;
-    }
-}
-
