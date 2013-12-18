@@ -287,7 +287,7 @@ void LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
     struct sockaddr_in recept = { 0 };
     
     char recvbuf[MAX_PACKET];
-    char pack_icmp[MAX_PACKET] = { 0 };
+    char packet[MAX_PACKET] = { 0 };
     char *host = NULL, *rsaddr = NULL;
     
     char dest[MAX_ADDRESS];
@@ -335,8 +335,8 @@ void LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
 						exit(-1);
 					break;
 				case 'i':
-					ConstructIPHeader((struct iphdr*)pack_icmp, ttl, source, dest, 'i');
-					ConstructICMPHeader((struct icmphdr*)(pack_icmp+sizeof(struct iphdr)));
+					ConstructIPHeader((struct iphdr*)packet, ttl, source, dest, 'i');
+					ConstructICMPHeader((struct icmphdr*)(packet+sizeof(struct iphdr)));
 					if ( ! SetHDRINCL(send_socket))
 						exit(-1);
 					break;
@@ -347,7 +347,7 @@ void LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
 			if ( ! SetSNDTimeOut(send_socket, s_timeout))    exit(-1);
 			if ( ! SetRCVTimeOut(receive_socket, r_timeout)) exit(-1);
 
-			if (sendto(send_socket, pack_icmp, MAX_PACKET, 0, (struct sockaddr*) &server, addrlen) == -1)
+			if (sendto(send_socket, packet, MAX_PACKET, 0, (struct sockaddr*) &server, addrlen) == -1)
 				perror("sendto()");
 
 			else
