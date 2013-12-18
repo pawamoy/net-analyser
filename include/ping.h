@@ -14,6 +14,7 @@
 #include <linux/ip.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <signal.h>
 //#include <netinet/ip_icmp.h>
 //#include <netinet/ip.h>
 
@@ -33,5 +34,11 @@ void Usage(void);
  * \return 0
  */
 int main_ping(int argc, char* argv[]);
+
+/**\brief SIGINT handler
+ * \param sig
+ * \return void
+ */
+void handlerArret(int s);
 
 #endif //__PING_H
