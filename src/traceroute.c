@@ -299,6 +299,7 @@ void LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
     int received = 0;
     int att, attempt = ttl_t[3];
     int ttl, min_ttl = ttl_t[0], max_ttl = ttl_t[1], hops = ttl_t[2];
+    int bytes = 0;
     
     for (ttl = min_ttl; ttl <= max_ttl; ttl += hops)
     {
@@ -309,14 +310,17 @@ void LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
 			switch (probe)
 			{
 				case 'u':
+					bytes = UDP_LEN;
 					send_socket = OpenDgramSocket('u');
 					receive_socket = OpenRawSocket('i');
 					break;
 				case 'i':
+					bytes = ICMP_LEN;
 					send_socket = OpenRawSocket('i');
 					receive_socket = OpenRawSocket('i');
 					break;
 				case 't':
+					bytes = TCP_LEN;
 					send_socket = OpenRawSocket('t');
 					receive_socket = OpenRawSocket('t');
 					break;
@@ -351,7 +355,7 @@ void LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
 			if ( ! SetSNDTimeOut(send_socket, s_timeout))    exit(-1);
 			if ( ! SetRCVTimeOut(receive_socket, r_timeout)) exit(-1);
 
-			if (sendto(send_socket, packet, MAX_PACKET, 0, (struct sockaddr*) &server, addrlen) == -1)
+			if (sendto(send_socket, packet, bytes, 0, (struct sockaddr*) &server, addrlen) == -1)
 				perror("sendto()");
 
 			else

@@ -121,6 +121,10 @@ int main(int argc, char** argv)
 		         strcmp(argv[i], "--probe") == 0)        probe = tolower(argv[i+1][0]);
 		else if (strcmp(argv[i], "-a") == 0 ||
 		         strcmp(argv[i], "--attempt") == 0)      attempt = atoi(argv[i+1]);
+		else {
+			fprintf(stderr, "%s: unknown option\n", argv[i]);
+			Usage();
+		}
 	}
 	
 	switch (min_ttl && max_ttl && hops && rcv_timeout && snd_timeout && attempt)
@@ -132,16 +136,15 @@ int main(int argc, char** argv)
 			break;
 	}
 	
-	bytes = sizeof(struct iphdr);
 	switch (probe) {
 		case 'u':
-			bytes += sizeof(struct udphdr);
+			bytes = UDP_LEN;
 			break;
 		case 'i':
-			bytes += sizeof(struct icmphdr);
+			bytes = ICMP_LEN;
 			break;
 		case 't':
-			bytes += sizeof(struct tcphdr);
+			bytes = TCP_LEN;
 			break; 
 		default :
 			fprintf(stderr, "Invalid probe method: use with 'udp', 'icmp' or 'tcp'");
@@ -181,14 +184,13 @@ int main(int argc, char** argv)
     inet_aton(ipstr, &(server.sin_addr));
 
 	// init local addr structure
-    my_addr.sin_family      = AF_INET;
-    my_addr.sin_port        = htons(portno);
+    my_addr.sin_family = AF_INET;
+    my_addr.sin_port = htons(portno);
     inet_aton(myip, &(my_addr.sin_addr));
-    //~ my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     
     
     //-----------------------------------------------------//
-	// starting loops
+	// starting traceroute
 	//-----------------------------------------------------//
 	int ttl_t[4] = {min_ttl, max_ttl, hops, attempt};
 	
@@ -198,9 +200,6 @@ int main(int argc, char** argv)
 		case 't':
 			LoopTrace(rcv_timeout, snd_timeout, ttl_t, logfile, probe, server, my_addr);
 			break;
-		//~ case 't':
-			//~ LoopTCP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
-			//~ break;
 		default: 
 			break;
 	}

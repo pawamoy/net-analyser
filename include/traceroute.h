@@ -28,6 +28,10 @@
 #define MAX_PACKET 1024
 #define MAX_ADDRESS 128
 
+#define ICMP_LEN 28
+#define UDP_LEN 28
+#define TCP_LEN 40
+
 typedef struct packet_tcp {
     struct iphdr iph;
     struct tcphdr tcph;
