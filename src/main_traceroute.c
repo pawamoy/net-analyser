@@ -187,10 +187,8 @@ int main(int argc, char** argv)
 	
 	switch (probe) {
 		case 'u':
-			LoopUDP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
-			break;
 		case 'i':
-			LoopICMP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
+			LoopTrace(rcv_timeout, snd_timeout, ttl_t, logfile, probe, server, my_addr);
 			break;
 		case 't':
 			LoopTCP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
