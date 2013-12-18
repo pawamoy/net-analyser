@@ -74,6 +74,7 @@ int main(int argc, char** argv)
                        hops         = 1,
 					   rcv_timeout  = 3,
 					   snd_timeout  = 3,
+                       attempt      = 3,
                        i            = 0,
                        log_data     = 0;
     char              *ipstr        = NULL,
@@ -117,6 +118,17 @@ int main(int argc, char** argv)
 		         strcmp(argv[i], "--port") == 0)         portno = atoi(argv[i+1]);
 		else if (strcmp(argv[i], "-b") == 0 ||
 		         strcmp(argv[i], "--probe") == 0)        probe = tolower(argv[i+1][0]);
+		else if (strcmp(argv[i], "-a") == 0 ||
+		         strcmp(argv[i], "--attempt") == 0)      attempt = atoi(argv[i+1]);
+	}
+	
+	switch (min_ttl && max_ttl && hops && rcv_timeout && snd_timeout && attempt)
+	{
+		case 0:
+			fprintf(stderr, "All TTL values (min, max, hops), Timers (recv, send) and Attempts MUST BE greater than 0 !\n");
+			exit(-1);
+		default:
+			break;
 	}
 	
 	switch (probe) {
@@ -171,14 +183,12 @@ int main(int argc, char** argv)
     //-----------------------------------------------------//
 	// starting loops
 	//-----------------------------------------------------//
-	int ttl_t[3] = {min_ttl, max_ttl, hops};
+	int ttl_t[4] = {min_ttl, max_ttl, hops, attempt};
 	
 	switch (probe) {
 		case 'u':
-			LoopUDP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
-			break;
 		case 'i':
-			LoopICMP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
+			LoopTrace(rcv_timeout, snd_timeout, ttl_t, logfile, probe, server, my_addr);
 			break;
 		case 't':
 			LoopTCP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
