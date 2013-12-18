@@ -24,6 +24,7 @@
 //#include <netinet/ip_icmp.h>
 //#include <netinet/ip.h>
 #include <unistd.h>
+#include <signal.h>
 
 /**\brief Get IP from an hostname (ie. google.fr)
  * \param hostname String of domain name
@@ -41,5 +42,11 @@ char* GetMyIP(void);
  * \return 1(yes), 0(no)
  */
 int IsMyAddress(char* addr);
+
+/**\brief SIGINT handler
+ * \param sig
+ * \return void
+ */
+void handlerArret(int s);
 
 #endif //__PING_H

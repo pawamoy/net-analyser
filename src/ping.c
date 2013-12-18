@@ -114,16 +114,23 @@ void Usage(void)
     exit(-1);
 }
 
+void handlerArret(int s){
+           printf("%d\n",s);
+	   printf("--- Affichage stats ping ---");
+           exit(1); 
+}
+
 //<--- MAIN --->
 int main(int argc, char** argv)
 {
-    int *ip_flags, sd;
+    int *ip_flags, sd, *cptTransmis, *cptRecus;
     char /**cible,*/ *ipstr = NULL, *myip = NULL;
     struct iphdr hdrip;
     struct icmphdr hdricmp;
     uint8_t *paquet;
     struct addrinfo hints/*, *resolv*/;
     struct sockaddr_in /**server,*/ my_addr;
+    struct sigaction sigIntHandler;
 
 	//vérification arg
     if (argc != 2) Usage();   
@@ -138,6 +145,10 @@ int main(int argc, char** argv)
 	//allocation mémoire des diff. var
 	//cible = (char *)malloc(40*sizeof(char));
         //memset(cible, 0, 40*sizeof(char));
+	cptTransmis = (int *)malloc(4*sizeof(int));
+        memset (cptTransmis, 0, 4*sizeof(int));
+	cptRecus = (int *)malloc(4*sizeof(int));
+        memset (cptRecus, 0, 4*sizeof(int));
 	ipstr = (char *)malloc((INET_ADDRSTRLEN*sizeof(char)));
 	memset(ipstr, 0, (INET_ADDRSTRLEN*sizeof(char)));
 	myip = (char *)malloc((INET_ADDRSTRLEN*sizeof(char)));
@@ -146,6 +157,15 @@ int main(int argc, char** argv)
         memset (ip_flags, 0, 4*sizeof(int));
 	paquet = (uint8_t *)malloc(IP_MAXPACKET*sizeof(uint8_t));
         memset (paquet, 0, IP_MAXPACKET*sizeof(uint8_t));
+	
+
+	//gestion Ctrl+C
+   sigIntHandler.sa_handler = handlerArret;
+   sigemptyset(&sigIntHandler.sa_mask);
+   sigIntHandler.sa_flags = 0;
+
+   sigaction(SIGINT, &sigIntHandler, NULL);
+
 
     //@IP à partir du domaine fourni en arg
     ipstr = GetIPFromHostname(argv[1]);
@@ -206,6 +226,17 @@ int main(int argc, char** argv)
       exit(EXIT_FAILURE);
     } else {
 	printf("Envoi du paquet ICMP réussi\n");
+	printf("Envoi du paquet ICMP %u réussi\n", ntohs(hdricmp.un.echo.sequence));
+	cptTransmis++;
+    }
+    //réception du paquet
+    if (recvfrom(sd, paquet, LONGHDR_IP+LONGHDR_ICMP, 0, (struct sockaddr *)&my_addr, (socklen_t*)sizeof(struct sockaddr))<0)
+    {
+      perror ("échec recvfrom()");
+      exit(EXIT_FAILURE);
+    } else {
+	printf("Réception du paquet ICMP %u réussie\n", ntohs(hdricmp.un.echo.sequence));
+	cptRecus++;
     }
 
     //fermeture socket
