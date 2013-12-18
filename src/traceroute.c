@@ -6,7 +6,7 @@
 #include "../include/traceroute.h"
 #include "../include/log.h"
 
-void Usage()
+void UsageTraceroute()
 {
     printf("USAGE: traceroute servername [-b icmp|udp|tcp] [-p PORT] [-n MIN_TTL] [-m MAX_TTL] [-h HOPS] [-r SEC] [-s SEC]\n");
     exit(-1);
@@ -325,7 +325,7 @@ int main_traceroute(int argc, char* argv[])
 	//-----------------------------------------------------//
 	
     // check the number of args on command line
-    if (argc < 2) Usage();
+    if (argc < 2) UsageTraceroute();
 
     // check root privileges
     //~ uid = getuid();
@@ -414,7 +414,7 @@ int main_traceroute(int argc, char* argv[])
 				}
 		else {
 			fprintf(stderr, "%s: unknown option\n", argv[i]);
-			Usage();
+			UsageTraceroute();
 		}
 	}
 	

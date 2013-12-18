@@ -1,0 +1,6 @@
+#!/bin/bash
+if [ ! -f bin/main_ping ]; then
+	make && /usr/bin/sudo bin/main_ping $*
+else
+	/usr/bin/sudo bin/main_ping $*
+fi
