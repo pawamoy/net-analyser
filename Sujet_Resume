@@ -1,10 +1,10 @@
 RENDU : 20 DECEMBRE
 
-commenter avec doxygen
-faire un makefile
-compilation avec -std=gnu99 -pedantic -Werror -W -Wall -Wextra -Wmissing-declarations
+commenter avec doxygen 																	OK
+faire un makefile																		OK
+compilation avec -std=gnu99 -pedantic -Werror -W -Wall -Wextra -Wmissing-declarations	OK
 -Wmissing-prototypes -Wredundant-decls -Wshadow -Wbad-function-cast -Wcast-qual
-pas de fuite mémoire
+pas de fuite mémoire																	OK
 
 rapport (10 pages max) :
 - démarche (genre gestion du temps, difficultés)
@@ -37,7 +37,7 @@ Exécution :
 
 
 
-Traceroute :
+Traceroute :																			OK (manque TCP)
 	- modif champ TTL dans l'entête IP
 	- à 0, le routeur renvoie TTL exceeded
 	- Reverse-DNS pour avoir le nom de routeurs à partir de l'IP

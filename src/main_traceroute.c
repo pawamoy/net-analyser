@@ -13,8 +13,8 @@
  * modif champ TTL sur socket																DONE
  * à 0, le routeur renvoie TTL exceeded														OSEF
  * Reverse-DNS pour avoir le nom de routeurs à partir de l'IP								DONE
- * support de TCP, UDP et ICMP																DONE: UDP
- * plusieurs modes : pas (nb sauts), fréquence sonde, tentatives, temporisateurs			INDEV
+ * support de TCP, UDP et ICMP																DONE: UDP & ICMP
+ * plusieurs modes : pas (nb sauts), fréquence sonde, tentatives, temporisateurs			DONE (fréquence sonde ???)
  * 
  * Ressources internet:
  * http://austinmarton.wordpress.com/2011/09/14/sending-raw-ethernet-packets-from-a-specific-interface-in-c-on-linux/
@@ -48,7 +48,7 @@ void SwitchErrno(int err)
         case ELOOP: printf("ELOOP\n");                  break;
         case EMSGSIZE: printf("EMSGSIZE\n");            break;
         case ENAMETOOLONG: printf("ENAMETOOLONG\n");    break;
-        case ENOENT: printf("ENOENT\n");                 break;
+        case ENOENT: printf("ENOENT\n");                break;
         case ENOTDIR: printf("ENOTDIR\n");              break;
         case ENOBUFS: printf("ENOBUFS\n");              break;
         case ENOMEM: printf("ENOMEM\n");                break;
@@ -101,26 +101,82 @@ int main(int argc, char** argv)
     }
     
     // argument analysis
-    for (i=2; i<argc; i+=2)
+    for (i=2; i<argc; i++)
     {
 		     if (strcmp(argv[i], "-m") == 0 ||
-		         strcmp(argv[i], "--maxttl") == 0)       max_ttl = atoi(argv[i+1]);
+		         strcmp(argv[i], "--maxttl") == 0) {
+					if (i+1<argc) {
+						max_ttl = atoi(argv[i+1]); i++;
+					} else {
+						fprintf(stderr, "-m: missing value: INT>0\n");
+						exit(-1);
+					}
+				}
 		else if (strcmp(argv[i], "-n") == 0 ||
-		         strcmp(argv[i], "--minttl") == 0)       min_ttl = atoi(argv[i+1]);
+		         strcmp(argv[i], "--minttl") == 0) {
+					if (i+1<argc) {
+						min_ttl = atoi(argv[i+1]); i++;
+					} else {
+						fprintf(stderr, "-n: missing value: INT>0\n");
+						exit(-1);
+					}
+				}
 		else if (strcmp(argv[i], "-h") == 0 ||
-		         strcmp(argv[i], "--hops") == 0)         hops = atoi(argv[i+1]);
+		         strcmp(argv[i], "--hops") == 0) {
+					if (i+1<argc) {
+						hops = atoi(argv[i+1]); i++;
+					} else {
+						fprintf(stderr, "-h: missing value: INT>0\n");
+						exit(-1);
+					}
+				}
 		else if (strcmp(argv[i], "-r") == 0 ||
-		         strcmp(argv[i], "--recv-timeout") == 0) rcv_timeout = atoi(argv[i+1]);
+		         strcmp(argv[i], "--recv-timeout") == 0) {
+					if (i+1<argc) {
+						rcv_timeout = atoi(argv[i+1]); i++;
+					} else {
+						fprintf(stderr, "-r: missing value: INT>0\n");
+						exit(-1);
+					}
+				}
 		else if (strcmp(argv[i], "-s") == 0 ||
-		         strcmp(argv[i], "--send-timeout") == 0) snd_timeout = atoi(argv[i+1]);
+		         strcmp(argv[i], "--send-timeout") == 0) {
+					if (i+1<argc) {
+						snd_timeout = atoi(argv[i+1]); i++;
+					} else {
+						fprintf(stderr, "-s: missing value: INT>0\n");
+						exit(-1);
+					}
+				}
 		else if (strcmp(argv[i], "-l") == 0 ||
-		         strcmp(argv[i], "--log") == 0)          log_data = 1;
+		         strcmp(argv[i], "--log") == 0) log_data = 1;
 		else if (strcmp(argv[i], "-p") == 0 ||
-		         strcmp(argv[i], "--port") == 0)         portno = atoi(argv[i+1]);
+		         strcmp(argv[i], "--port") == 0) {
+					if (i+1<argc) {
+						portno = atoi(argv[i+1]); i++;
+					} else {
+						fprintf(stderr, "-p: missing value: INT\n");
+						exit(-1);
+					}
+				}
 		else if (strcmp(argv[i], "-b") == 0 ||
-		         strcmp(argv[i], "--probe") == 0)        probe = tolower(argv[i+1][0]);
+		         strcmp(argv[i], "--probe") == 0) {
+					if (i+1<argc) {
+						probe = tolower(argv[i+1][0]); i++;
+					} else {
+						fprintf(stderr, "-b: missing value: ICMP|TCP|UDP\n");
+						exit(-1);
+					}
+				}
 		else if (strcmp(argv[i], "-a") == 0 ||
-		         strcmp(argv[i], "--attempt") == 0)      attempt = atoi(argv[i+1]);
+		         strcmp(argv[i], "--attempt") == 0) {
+					if (i+1<argc) {
+						attempt = atoi(argv[i+1]); i++;
+					} else {
+						fprintf(stderr, "-a: missing value: INT>0\n");
+						exit(-1);
+					}
+				}
 		else {
 			fprintf(stderr, "%s: unknown option\n", argv[i]);
 			Usage();
@@ -147,7 +203,7 @@ int main(int argc, char** argv)
 			bytes = TCP_LEN;
 			break; 
 		default :
-			fprintf(stderr, "Invalid probe method: use with 'udp', 'icmp' or 'tcp'");
+			fprintf(stderr, "%c: invalid probe method: use with 'udp', 'icmp' (default) or 'tcp'\n", probe);
 			exit(-1);
 	}
 

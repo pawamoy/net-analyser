@@ -7,23 +7,14 @@
 #define __TRACEROUTE_H
 
 #include <stdio.h>
-#include <stdlib.h>
-
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <ifaddrs.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
 #include <netinet/udp.h>
 #include <linux/icmp.h>
 #include <linux/tcp.h>
 #include <linux/ip.h>
 #include <ctype.h>
-
 #include <unistd.h>
 
+#include "../include/common.h"
 
 #define MAX_PACKET 1024
 #define MAX_ADDRESS 128
@@ -31,11 +22,6 @@
 #define ICMP_LEN 28
 #define UDP_LEN 28
 #define TCP_LEN 40
-
-typedef struct packet_tcp {
-    struct iphdr iph;
-    struct tcphdr tcph;
-} PacketTCP;
 
 typedef int Socket;
 
@@ -106,29 +92,6 @@ void ConstructICMPHeader(struct icmphdr* icmph);
  * \param icmph Pointer to an TCP header structure
  */
 void ConstructTCPHeader(struct tcphdr *tcph);
-
-/**\brief Get IP from an hostname (ie. google.fr)
- * \param hostname String of domain name
- * \return NULL on error, a pointer to char
- */
-char* GetIPFromHostname(const char *hostname);
-
-/**\brief Get my own IP address
- * \return String (address)
- */
-char* GetMyIP(void);
-
-/**\brief Parse address to see if it is my address (not local)
- * \param addr Pointer to a string (address)
- * \return 1(yes), 0(no)
- */
-int IsMyAddress(char* addr);
-
-/**\brief Get host name from an IP address
- * \param ip The IP address
- * \return A string containing host name
- */
-char* GetHostNameFromIP(const char* ip);
 
 /**\brief Traceroute
  * \param rcvt Receive timer
