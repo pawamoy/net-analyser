@@ -1,6 +1,7 @@
 Net Analyser Project
 ====================
 
- * A rendre le 20 décembre
- * On s'occupera du papayer plus tard
- * make run DOMAIN=www.google.fr (par exemple)
+ * Date de rendu (Moodle) : 20/12/13 23:55
+ * 3 lanceurs : ping, traceroute, netanalyser
+ * Pas besoin de tapper make main_traceroute: ./traceroute compilera s'il ne trouve pas l'exécutable
+ * Idem pour ./ping et ./netanalyser
