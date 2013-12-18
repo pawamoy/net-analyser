@@ -28,11 +28,6 @@
 #define MAX_PACKET 1024
 #define MAX_ADDRESS 128
 
-typedef struct packet_icmp {
-    struct iphdr iph;
-    struct icmphdr icmph;
-} PacketICMP;
-
 typedef struct packet_tcp {
     struct iphdr iph;
     struct tcphdr tcph;
@@ -100,9 +95,8 @@ void ConstructIPHeader(struct iphdr* iph,
 
 /**\brief Constructs an ICMP header
  * \param icmph Pointer to an ICMP header structure
- * \param seq Sequence number
  */
-void ConstructICMPHeader(struct icmphdr* icmph, int seq);
+void ConstructICMPHeader(struct icmphdr* icmph);
 
 /**\brief Constructs an TCP header
  * \param icmph Pointer to an TCP header structure
@@ -132,37 +126,38 @@ int IsMyAddress(char* addr);
  */
 char* GetHostNameFromIP(const char* ip);
 
-/**\brief Traceroute with UDP probes
+/**\brief Traceroute
  * \param rcvt Receive timer
  * \param sndt Send timer
- * \param ttl_t Contains min_ttl, max_ttl, hops in this order
+ * \param ttl_t Contains min_ttl, max_ttl, hops and attempts in this order
  * \param logfile FILE pointer (if NULL, don't log)
+ * \param probe Probe to use: i=icmp, t=tcp, u=udp
  * \param server Destination data
  * \param my_addr Source data
  */
-void LoopUDP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
+void LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
              struct sockaddr_in server, struct sockaddr_in my_addr);
 
-/**\brief Traceroute with ICMP probes
- * \param rcvt Receive timer
- * \param sndt Send timer
- * \param ttl_t Contains min_ttl, max_ttl, hops in this order
- * \param logfile FILE pointer (if NULL, don't log)
- * \param server Destination data
- * \param my_addr Source data
- */
-void LoopICMP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
-             struct sockaddr_in server, struct sockaddr_in my_addr);
+//~ /**\brief Traceroute with ICMP probes
+ //~ * \param rcvt Receive timer
+ //~ * \param sndt Send timer
+ //~ * \param ttl_t Contains min_ttl, max_ttl, hops and attempts in this order
+ //~ * \param logfile FILE pointer (if NULL, don't log)
+ //~ * \param server Destination data
+ //~ * \param my_addr Source data
+ //~ */
+//~ void LoopICMP(int rcvt, int sndt, int ttl_t[4], FILE* logfile,
+             //~ struct sockaddr_in server, struct sockaddr_in my_addr);
              
 /**\brief Traceroute with TCP probes
  * \param rcvt Receive timer
  * \param sndt Send timer
- * \param ttl_t Contains min_ttl, max_ttl, hops in this order
+ * \param ttl_t Contains min_ttl, max_ttl, hops and attempts in this order
  * \param logfile FILE pointer (if NULL, don't log)
  * \param server Destination data
  * \param my_addr Source data
  */
-void LoopTCP(int rcvt, int sndt, int ttl_t[3], FILE* logfile,
+void LoopTCP(int rcvt, int sndt, int ttl_t[4], FILE* logfile,
              struct sockaddr_in server, struct sockaddr_in my_addr);
                   
 
