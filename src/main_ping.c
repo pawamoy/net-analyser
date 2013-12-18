@@ -5,7 +5,6 @@
  */
 
 #include "../include/ping.h"
-#include "../include/log.h"
 
 /*
  * TODO:
@@ -16,6 +15,5 @@
  */
 
 int main(int argc, char* argv[]) {
-	main_ping(argc, argv);
-	return 0;
+	return main_ping(argc, argv);
 }
