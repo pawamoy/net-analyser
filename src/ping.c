@@ -1,112 +1,10 @@
 /**\file ping.c
  * \author val
- * \brief ping main
+ * \brief ping functions
  * \date December 10, 2013, 10:37 AM
  */
 
 #include "../include/ping.h"
-//#include <netinet/udp.h>
-//#include <netinet/tcp.h>
-
-#define LONGHDR_IP 20
-#define LONGHDR_ICMP 8
-#define IP_MAXPACKET 1024
-
-/*
- * TODO:
- * 	- utiliser le protocole ICMP afin d’envoyer, vers une machine ou un routeur, un message de type ECHO_REQUEST
- *	(réponse avec un ECHO_REPLY)
- *	- Les pertes ainsi que le RTT sont enregistrés
- *	- être capable d’envoyer des sondes ICMP, UDP et TCP et "interpréter les différents type de messages reçus"
- */
-
-//<--- FUNCTIONS --->
-char* GetIPFromHostname(const char* hostname)
-{
-    struct hostent *he;
-    struct in_addr **addr_list;
-    int i;
-         
-    if ( (he = gethostbyname( hostname ) ) == NULL)
-    {
-        // get the host info
-        herror("gethostbyname()");
-        exit(-1);
-    }
- 
-    addr_list = (struct in_addr **) he->h_addr_list;
-     
-    for(i = 0; addr_list[i] != NULL; i++)
-    {
-        //Return the first one;
-        return inet_ntoa(*addr_list[i]);
-    }
-     
-    exit(-1);
-}
-
-char* GetMyIP()
-{
-	struct ifaddrs *ifaddr, *ifa;
-	int family, s;
-	char* host = (char*)malloc(128*sizeof(char));
-
-	if (getifaddrs(&ifaddr) == -1) {
-	   perror("getifaddrs");
-	   exit(EXIT_FAILURE);
-	}
-
-	/* Walk through linked list, maintaining head pointer so we
-	  can free list later */
-
-	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-	   if (ifa->ifa_addr == NULL)
-		   continue;
-
-	   family = ifa->ifa_addr->sa_family;
-
-	   /* For an AF_INET* interface address, display the address */
-
-	   if (family == AF_INET || family == AF_INET6) {
-		   s = getnameinfo(ifa->ifa_addr,
-				   (family == AF_INET) ? sizeof(struct sockaddr_in) :
-										 sizeof(struct sockaddr_in6),
-				   host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
-		   if (s != 0) {
-			   printf("getnameinfo() failed: %s\n", gai_strerror(s));
-			   exit(EXIT_FAILURE);
-		   }
-		   if (IsMyAddress(host) == 1)
-		   {
-				break;
-		   }
-		}
-	}
-
-	freeifaddrs(ifaddr);
-	return host;
-}
-
-int IsMyAddress(char* addr)
-{
-	if (strcmp(addr, "127.0.0.1") == 0)
-	{
-		return 0;
-	}
-	
-	if (strlen(addr) >= 8)
-	{
-		if (isdigit(addr[0]) &&
-			isdigit(addr[1]) &&
-			isdigit(addr[2]) &&
-			addr[3] == '.')
-		{
-			return 1;
-		}
-	}
-	
-	return 0;
-}
 
 void Usage(void)
 {
@@ -114,8 +12,7 @@ void Usage(void)
     exit(-1);
 }
 
-//<--- MAIN --->
-int main(int argc, char** argv)
+int main_ping(int argc, char* argv[])
 {
     int *ip_flags, sd;
     char /**cible,*/ *ipstr = NULL, *myip = NULL;

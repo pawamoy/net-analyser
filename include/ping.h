@@ -8,38 +8,30 @@
 #define __PING_H
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <ifaddrs.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
 #include <netinet/udp.h>
 #include <linux/icmp.h>
 #include <linux/tcp.h>
 #include <linux/ip.h>
 #include <ctype.h>
+#include <unistd.h>
 //#include <netinet/ip_icmp.h>
 //#include <netinet/ip.h>
-#include <unistd.h>
 
-/**\brief Get IP from an hostname (ie. google.fr)
- * \param hostname String of domain name
- * \return NULL on error, a pointer to char
- */
-char* GetIPFromHostname(const char *hostname);
+#include "../include/common.h"
 
-/**\brief Get my own IP address
- * \return String (address)
- */
-char* GetMyIP(void);
+#define LONGHDR_IP 20
+#define LONGHDR_ICMP 8
+#define IP_MAXPACKET 1024
 
-/**\brief Parse address to see if it is my address (not local)
- * \param addr Pointer to a string (address)
- * \return 1(yes), 0(no)
+/**\brief Show usage of the ping program
  */
-int IsMyAddress(char* addr);
+void Usage(void);
+
+/**\brief Launch the ping program
+ * \param argc Number of args
+ * \param argv List of args
+ * \return 0
+ */
+int main_ping(int argc, char* argv[]);
 
 #endif //__PING_H

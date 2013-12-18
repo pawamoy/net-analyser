@@ -14,18 +14,19 @@ vpath %.o obj/
 vpath main_traceroute bin/
 vpath %.a lib/
 
-main_ping : ping.o | bin
+main_ping : main_ping.o ping.o common.o | bin
 	/usr/bin/gcc $(CFLAGS) -o $@ $(OPATH)ping.o
 	/bin/mv $@ bin/
 
-main_traceroute : main_traceroute.o traceroute.o log.o | bin
+main_traceroute : main_traceroute.o traceroute.o common.o log.o | bin
 	/usr/bin/gcc $(CFLAGS) -o $@ $(OPATH)*
 	/bin/mv $@ bin/
 
 main_traceroute.o : main_traceroute.c traceroute.h log.h
-traceroute.o : traceroute.c traceroute.h log.h
+traceroute.o : traceroute.c traceroute.h log.h common.h
+common.o : common.c common.h
 log.o : log.c log.h
-ping.o : ping.c
+ping.o : ping.c ping.h common.h
 
 %.o : | obj
 	/usr/bin/gcc $(CFLAGS) -c $<
