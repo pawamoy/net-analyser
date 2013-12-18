@@ -6,19 +6,16 @@
 #ifndef __TRACEROUTE_H
 #define __TRACEROUTE_H
 
-#include <stdio.h>
 #include <netinet/udp.h>
 #include <linux/icmp.h>
 #include <linux/tcp.h>
 #include <linux/ip.h>
-#include <ctype.h>
 #include <unistd.h>
 
 #include "../include/common.h"
 #include "../include/log.h"
 
 #define MAX_PACKET 1024
-#define MAX_ADDRESS 128
 
 #define ICMP_LEN 28
 #define UDP_LEN 28
@@ -28,7 +25,7 @@ typedef int Socket;
 
 /**\brief Show usage of the program
  */
-void Usage(void);
+void UsageTraceroute(void);
 
 /**\brief Set TTL field (IP header) for socket 
  * \param s socket identifier

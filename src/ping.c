@@ -6,7 +6,7 @@
 
 #include "../include/ping.h"
 
-void Usage(void)
+void UsagePing(void)
 {
     printf("USAGE: ping servername\n");
     exit(-1);
@@ -30,7 +30,7 @@ int main_ping(int argc, char* argv[])
     struct sigaction sigIntHandler;
 
 	//vérification arg
-    if (argc != 2) Usage();   
+    if (argc != 2) UsagePing();   
 	
     //vérif. root
     if (getuid())

@@ -7,12 +7,10 @@
 #ifndef __PING_H
 #define __PING_H
 
-#include <stdio.h>
 #include <netinet/udp.h>
 #include <linux/icmp.h>
 #include <linux/tcp.h>
 #include <linux/ip.h>
-#include <ctype.h>
 #include <unistd.h>
 #include <signal.h>
 //#include <netinet/ip_icmp.h>
@@ -27,7 +25,7 @@
 
 /**\brief Show usage of the ping program
  */
-void Usage(void);
+void UsagePing(void);
 
 /**\brief Launch the ping program
  * \param argc Number of args

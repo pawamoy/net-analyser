@@ -6,6 +6,7 @@
 #ifndef __COMMON_H
 #define __COMMON_H
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <netdb.h>
@@ -14,6 +15,9 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <ifaddrs.h>
+#include <ctype.h>
+
+#define MAX_ADDRESS 128
 
 /**\brief Get IP from an hostname (ie. google.fr)
  * \param hostname String of domain name
