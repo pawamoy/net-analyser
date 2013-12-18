@@ -15,6 +15,7 @@
 #include <unistd.h>
 
 #include "../include/common.h"
+#include "../include/log.h"
 
 #define MAX_PACKET 1024
 #define MAX_ADDRESS 128
@@ -105,5 +106,11 @@ void ConstructTCPHeader(struct tcphdr *tcph);
 void LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
              struct sockaddr_in server, struct sockaddr_in my_addr);
 
+/**\brief Launch the traceroute program
+ * \param argc Number of args
+ * \param argv List of args
+ * \return 0 on success
+ */
+int main_traceroute(int argc, char* argv[]);
 
 #endif // __TRACEROUTE_H
