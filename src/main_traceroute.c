@@ -76,6 +76,7 @@ int main(int argc, char** argv)
 					   snd_timeout  = 3,
                        attempt      = 3,
                        i            = 0,
+                       bytes        = 0,
                        log_data     = 0;
     char              *ipstr        = NULL,
                       *myip         = NULL,
@@ -131,11 +132,17 @@ int main(int argc, char** argv)
 			break;
 	}
 	
+	bytes = sizeof(struct iphdr);
 	switch (probe) {
 		case 'u':
-		case 'i':
-		case 't':
+			bytes += sizeof(struct udphdr);
 			break;
+		case 'i':
+			bytes += sizeof(struct icmphdr);
+			break;
+		case 't':
+			bytes += sizeof(struct tcphdr);
+			break; 
 		default :
 			fprintf(stderr, "Invalid probe method: use with 'udp', 'icmp' or 'tcp'");
 			exit(-1);
@@ -151,7 +158,7 @@ int main(int argc, char** argv)
     myip = GetMyIP();
     
     // stdout
-    printf("Domain: %s\nAddress: %s\n\n", argv[1], ipstr);
+    printf("traceroute to %s (%s), %d hops max, %d byte packets\n", argv[1], ipstr, max_ttl, bytes);
     
 	// opens a log file, exit if error
 	if (log_data == 1)
@@ -188,11 +195,12 @@ int main(int argc, char** argv)
 	switch (probe) {
 		case 'u':
 		case 'i':
+		case 't':
 			LoopTrace(rcv_timeout, snd_timeout, ttl_t, logfile, probe, server, my_addr);
 			break;
-		case 't':
-			LoopTCP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
-			break;
+		//~ case 't':
+			//~ LoopTCP(rcv_timeout, snd_timeout, ttl_t, logfile, server, my_addr);
+			//~ break;
 		default: 
 			break;
 	}

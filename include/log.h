@@ -31,20 +31,20 @@ FILE* OpenLog(void);
  */
 int CloseLog(FILE* logfile);
 
-/**\brief Appends a string and a line feed in a log file.
- * If the string is NULL, writes a line feed
- * \param logfile The log file to write
- * \param string The string to append
- * \return N>0 (chars written on success), N<0 (writing error: ferror is set, encoding error: errno is set to EILSEQ)
- */
-int WriteLogLF(FILE* logfile, char* string);
-
-/**\brief Appends a string in a log file.
- * If the string is NULL, doesn't write anything
- * \param logfile The log file to write
- * \param string The string to append
- * \return N>=0 (chars written on success), N<0 (writing error: ferror is set, encoding error: errno is set to EILSEQ)
- */
-int WriteLog(FILE* logfile, char* string);
+//~ /**\brief Appends a string and a line feed in a log file.
+ //~ * If the string is NULL, writes a line feed
+ //~ * \param logfile The log file to write
+ //~ * \param string The string to append
+ //~ * \return N>0 (chars written on success), N<0 (writing error: ferror is set, encoding error: errno is set to EILSEQ)
+ //~ */
+//~ int WriteLogLF(FILE* logfile, char* string);
+//~ 
+//~ /**\brief Appends a string in a log file.
+ //~ * If the string is NULL, doesn't write anything
+ //~ * \param logfile The log file to write
+ //~ * \param string The string to append
+ //~ * \return N>=0 (chars written on success), N<0 (writing error: ferror is set, encoding error: errno is set to EILSEQ)
+ //~ */
+//~ int WriteLog(FILE* logfile, char* string);
 
 #endif // __LOG_H
