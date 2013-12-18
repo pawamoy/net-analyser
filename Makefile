@@ -14,9 +14,9 @@ vpath %.o obj/
 vpath main_traceroute bin/
 vpath %.a lib/
 
-netanalyser : main.o traceroute.o ping.o common.o log.o | bin
+main : main.o traceroute.o ping.o common.o log.o | bin
 	/usr/bin/gcc $(CFLAGS) -o $@ $(OPATH)main.o $(OPATH)traceroute.o $(OPATH)ping.o $(OPATH)common.o $(OPATH)log.o
-	/bin/mv $@ bin/
+	/bin/mv $@ bin/netanalyser
 
 main_ping : main_ping.o ping.o common.o log.o | bin
 	/usr/bin/gcc $(CFLAGS) -o $@ $(OPATH)main_ping.o $(OPATH)ping.o $(OPATH)common.o $(OPATH)log.o
