@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
           rcv_timeout = 3,
           snd_timeout = 3,
           attempt     = 3,
-          log_data    = 0,
+          //~ log_data    = 0,
           i;
           
     char *probe       = "icmp";
@@ -106,8 +106,8 @@ int main(int argc, char* argv[]) {
 						exit(-1);
 					}
 				}
-		else if (strcmp(argv[i], "-l") == 0 ||
-		         strcmp(argv[i], "--log") == 0) log_data = 1;
+		//~ else if (strcmp(argv[i], "-l") == 0 ||
+		         //~ strcmp(argv[i], "--log") == 0) log_data = 1;
 		else if (strcmp(argv[i], "-p") == 0 ||
 		         strcmp(argv[i], "--port") == 0) {
 					if (i+1<argc) {

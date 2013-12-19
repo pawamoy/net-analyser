@@ -172,7 +172,7 @@ void ConstructTCPHeader(struct tcphdr *tcph)
     tcph->urg_ptr = 0;
 }
  
-void LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
+int LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
              struct sockaddr_in server, struct sockaddr_in my_addr)
 {
 	struct timeval r_timeout = { rcvt, 0 };
@@ -264,7 +264,7 @@ void LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
 					fflush(stdout);
 					
 					if (logfile != NULL)
-						fprintf(logfile, " %-2d %-15s *\n", ttl, "*");
+						fprintf(logfile, "* ");
 
 				}
 				else
@@ -291,19 +291,22 @@ void LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
 		}
 		
 		printf("\n");	
-		if (reach_dest) return;
+		if (reach_dest) return ttl;
 	}
+	
+	return -1;
 }
 
 int main_traceroute(char* address, int portno, int min_ttl, int max_ttl, int hops, char probe,
-	                int rcv_timeout, int snd_timeout, int attempt, int log_data)
+	                int rcv_timeout, int snd_timeout, int attempt/*, int log_data*/)
 {
 	//-----------------------------------------------------//
 	// variable declaration
 	//-----------------------------------------------------//
     struct sockaddr_in server, my_addr;
     int                domain       = AF_INET,
-                       bytes        = 0;
+                       bytes        = 0,
+                       best_ttl     = -1;
     char              *ipstr        = NULL,
                       *myip         = NULL;
     FILE              *logfile      = NULL;
@@ -333,14 +336,14 @@ int main_traceroute(char* address, int portno, int min_ttl, int max_ttl, int hop
     printf("traceroute to %s (%s), %d hops max, %d byte packets\n", address, ipstr, max_ttl, bytes);
     
 	// opens a log file, exit if error
-	if (log_data == 1)
-	{
-		logfile = OpenLog();
-		if (logfile == NULL) exit(-1);
-		fprintf(logfile, "Domain: %s\n", address);
-		fprintf(logfile, "Resolved IP address: %s\n", ipstr);
-		fprintf(logfile, "My IP address: %s\n", myip);
-	}
+	//~ if (log_data == 1)
+	//~ {
+		//~ logfile = OpenLog();
+		//~ if (logfile == NULL) exit(-1);
+		//~ fprintf(logfile, "Domain: %s\n", address);
+		//~ fprintf(logfile, "Resolved IP address: %s\n", ipstr);
+		//~ fprintf(logfile, "My IP address: %s\n", myip);
+	//~ }
 
 
 	//-----------------------------------------------------//
@@ -362,14 +365,14 @@ int main_traceroute(char* address, int portno, int min_ttl, int max_ttl, int hop
 	// starting traceroute
 	//-----------------------------------------------------//
 	int ttl_t[4] = {min_ttl, max_ttl, hops, attempt};
-	LoopTrace(rcv_timeout, snd_timeout, ttl_t, logfile, probe, server, my_addr);
+	best_ttl = LoopTrace(rcv_timeout, snd_timeout, ttl_t, logfile, probe, server, my_addr);
 	
 	
 	//-----------------------------------------------------//
 	// close log file
 	//-----------------------------------------------------//
-    if (log_data == 1)
-		CloseLog(logfile);
+    //~ if (log_data == 1)
+		//~ CloseLog(logfile);
 
-    return (EXIT_SUCCESS);
+    return best_ttl;
 }

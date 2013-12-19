@@ -99,8 +99,9 @@ void ConstructTCPHeader(struct tcphdr *tcph);
  * \param probe Probe to use: i=icmp, t=tcp, u=udp
  * \param server Destination data
  * \param my_addr Source data
+ * \return Last used TTL value, or -1 if unreached destination
  */
-void LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
+int LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
              struct sockaddr_in server, struct sockaddr_in my_addr);
 
 /**\brief Launch the traceroute program
@@ -113,10 +114,10 @@ void LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
  * \param rcv_timeout Timer for receving data
  * \param snd_timeout Timer for sending data
  * \param attempt Number of attempts when failure
- * \param log_data Log data (1) or not (0)
+ //~ * \param log_data Log data (1) or not (0)
  * \return 0 on success
  */
 int main_traceroute(char* address, int portno, int min_ttl, int max_ttl, int hops, char probe,
-	                int rcv_timeout, int snd_timeout, int attempt, int log_data);
+	                int rcv_timeout, int snd_timeout, int attempt/*, int log_data*/);
 
 #endif // __TRACEROUTE_H
