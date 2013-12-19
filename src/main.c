@@ -1,95 +1,10 @@
 /**\file main.c
- * \brief traceroute + ping (//)
- * \author tim
- * \date December 18, 2013, 15:57 AM
+ * \brief netanalyser (traceroute + ping)
  */
 
-#include "../include/ping.h"
-#include "../include/traceroute.h"
-#include "../include/log.h" 
+#include "../include/netanalyser.h" 
 
-/* principe:
- * ping pour vérifier la joignabilité de l'hôte
- * première découverte de route (simple affichage + permet de récup le ttl min) + log
- * puis on fait tourner ping (option de fréquence en ligne de commande) + log
- * changement de TTL / variation de délai -> re-découverte de route
- * on répète jusqu'à Ctrl-C : affichage de statistiques (voir vrai ping)
- *     du genre % perte, délai, min max moy, routes, etc...
- * estimation asymétrie entres routes allers et retours
- */
-
-/* PSEUDO-CODE:
- * 
- * cur_ttl := 30
- * N := 5
- * 
- * if HostIsJoinable ( TTL:=64 )
- *  	begin loop
- *  		best_ttl := traceroute ( TTL:=cur_ttl )
- *  		if destination reached
- *  			while ping ( TTL:=best_ttl ) ;
- *  			case changed delay
- *  				continue loop
- *  			case packet loss
- *  				for N attempts
- *  					best_ttl++
- *  					if ping ( TTL:=best_ttl )
- *  						cur_ttl := best_ttl
- *  						continue loop
- * 						end if
- *  				end for
- *  				print info and exit
- * 				end case
- *  		else
- *  			if HostIsJoinable ( TTL:=64 )
- *  				print protocol problem
- *  			end if
- *  			print info and exit
- *  		end if
- * 		end loop
- * else
- *  	print info and exit
- * end if
- */
-
-int loop = 1;
-
-void ShowStatistics(void);
-void ShowStatistics()
-{
-	printf("Statistics :D\n");
-}
-
-void handler(int signum);
-void handler(int signum)
-{
-	ShowStatistics();
-	CloseLog();
-	exit(signum);
-}
-
-int ping(char* address, int threshold, int frequency, int attempts, int* best_ttl);
-int ping(char* address, int threshold, int frequency, int attempts, int* best_ttl)
-{
-	int i;
-	for (i=0; i<2; i++)
-	{
-		printf("Ping at %s with a threshold of %d%%, a frequency of %d, %d attempts if packets are lost, and a max ttl of %d\n",
-			address, threshold, frequency, attempts, *best_ttl);
-		sleep(frequency);
-	}
-	return LOSS;
-}
-
-/* This function try attempts times to join address with a TTL of max_ping
- * Returns 1 if joined, 0 else
- */
-int HostIsJoinable(char* address, int max_ping, int attempts);
-int HostIsJoinable(char* address, int max_ping, int attempts)
-{
-	printf("Host %s is joinable (ttl=%d and attemps=%d)\n", address, max_ping, attempts);
-	return 1;
-}
+static int loop = 1;
 
 int main(int argc, char* argv[]) {
 	//-----------------------------------------------------//
@@ -115,6 +30,10 @@ int main(int argc, char* argv[]) {
 	if (argc != 2) exit(-1);
 	/* analyse des arguments
 	 * séparation arg ping et arg traceroute
+	 * 
+	 * all        : port
+	 * ping       : frequency, threshold, attempts, timeouts, 
+	 * traceroute : probe, attempts, timeouts, 
 	 */
 	
 	//-----------------------------------------------------//

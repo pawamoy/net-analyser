@@ -1,6 +1,5 @@
 /**\file main_traceroute.c
  * \brief traceroute main
- * \date December 10, 2013, 10:37 AM
  */
 
 #include "../include/traceroute.h"
