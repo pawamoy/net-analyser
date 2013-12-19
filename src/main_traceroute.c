@@ -30,30 +30,17 @@ int main(int argc, char* argv[]) {
 	//-----------------------------------------------------//
 	// variable declaration
 	//-----------------------------------------------------//
-	int   portno      = 80,
-          min_ttl     = 1,
-          max_ttl     = 30,
-          hops        = 1,
-          rcv_timeout = 3,
-          snd_timeout = 3,
-          attempt     = 3,
-          //~ log_data    = 0,
-          i;
-          
-    char *probe       = "icmp";
+    StrTraceRoute tr = NewTraceRoute();
+    int i = 0;
+    char *probe = "icmp"; // see NewTraceRoute for default probe
     
     
     //-----------------------------------------------------//
 	// first verifications
 	//-----------------------------------------------------//
-	
-    // check the number of args on command line
-    if (argc < 2) UsageTraceroute();
+	if (argc < 2) UsageTraceroute(); // usage
 
-    // check root privileges
-    //~ uid = getuid();
-    //~ setuid(uid);
-    if (getuid()) {
+    if (getuid() != 0) { // non-root
         fprintf(stderr, "\nError: you must be root to use raw sockets\n");
         exit(-1);
     }
@@ -64,7 +51,7 @@ int main(int argc, char* argv[]) {
 		     if (strcmp(argv[i], "-m") == 0 ||
 		         strcmp(argv[i], "--maxttl") == 0) {
 					if (i+1<argc) {
-						max_ttl = atoi(argv[i+1]); i++;
+						tr.s.max_ttl = atoi(argv[i+1]); i++;
 					} else {
 						fprintf(stderr, "-m: missing value: INT>0\n");
 						exit(-1);
@@ -73,7 +60,7 @@ int main(int argc, char* argv[]) {
 		else if (strcmp(argv[i], "-n") == 0 ||
 		         strcmp(argv[i], "--minttl") == 0) {
 					if (i+1<argc) {
-						min_ttl = atoi(argv[i+1]); i++;
+						tr.s.min_ttl = atoi(argv[i+1]); i++;
 					} else {
 						fprintf(stderr, "-n: missing value: INT>0\n");
 						exit(-1);
@@ -82,7 +69,7 @@ int main(int argc, char* argv[]) {
 		else if (strcmp(argv[i], "-h") == 0 ||
 		         strcmp(argv[i], "--hops") == 0) {
 					if (i+1<argc) {
-						hops = atoi(argv[i+1]); i++;
+						tr.s.hops = atoi(argv[i+1]); i++;
 					} else {
 						fprintf(stderr, "-h: missing value: INT>0\n");
 						exit(-1);
@@ -91,7 +78,7 @@ int main(int argc, char* argv[]) {
 		else if (strcmp(argv[i], "-r") == 0 ||
 		         strcmp(argv[i], "--recv-timeout") == 0) {
 					if (i+1<argc) {
-						rcv_timeout = atoi(argv[i+1]); i++;
+						tr.s.rcvt = atoi(argv[i+1]); i++;
 					} else {
 						fprintf(stderr, "-r: missing value: INT>0\n");
 						exit(-1);
@@ -100,18 +87,16 @@ int main(int argc, char* argv[]) {
 		else if (strcmp(argv[i], "-s") == 0 ||
 		         strcmp(argv[i], "--send-timeout") == 0) {
 					if (i+1<argc) {
-						snd_timeout = atoi(argv[i+1]); i++;
+						tr.s.sndt = atoi(argv[i+1]); i++;
 					} else {
 						fprintf(stderr, "-s: missing value: INT>0\n");
 						exit(-1);
 					}
 				}
-		//~ else if (strcmp(argv[i], "-l") == 0 ||
-		         //~ strcmp(argv[i], "--log") == 0) log_data = 1;
 		else if (strcmp(argv[i], "-p") == 0 ||
 		         strcmp(argv[i], "--port") == 0) {
 					if (i+1<argc) {
-						portno = atoi(argv[i+1]); i++;
+						tr.portno = atoi(argv[i+1]); i++;
 					} else {
 						fprintf(stderr, "-p: missing value: INT\n");
 						exit(-1);
@@ -129,7 +114,7 @@ int main(int argc, char* argv[]) {
 		else if (strcmp(argv[i], "-a") == 0 ||
 		         strcmp(argv[i], "--attempt") == 0) {
 					if (i+1<argc) {
-						attempt = atoi(argv[i+1]); i++;
+						tr.s.attempts = atoi(argv[i+1]); i++;
 					} else {
 						fprintf(stderr, "-a: missing value: INT>0\n");
 						exit(-1);
@@ -141,7 +126,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	
-	switch (min_ttl && max_ttl && hops && rcv_timeout && snd_timeout && attempt)
+	switch (tr.s.min_ttl && tr.s.max_ttl && tr.s.hops && tr.s.rcvt && tr.s.sndt && tr.s.attempts)
 	{
 		case 0:
 			fprintf(stderr, "All TTL values (min, max, hops), Timers (recv, send) and Attempts MUST BE greater than 0 !\n");
@@ -154,12 +139,17 @@ int main(int argc, char* argv[]) {
 		case 'u':
 		case 'i':
 		case 't':
+			tr.s.probe = probe[0];
 			break;
 		default :
 			fprintf(stderr, "%s: invalid probe method: use with 'udp', 'icmp' (default) or 'tcp'\n", probe);
 			exit(-1);
 	}
+	
+	// get infos
+	tr.address = argv[1];
+    tr.ipstr = GetIPFromHostname(argv[1]);
+    tr.myip = GetMyIP();
     
-	return main_traceroute(argv[1], portno, min_ttl, max_ttl, hops, probe[0],
-	                       rcv_timeout, snd_timeout, attempt/*, log_data*/);
+	return main_traceroute(tr);
 }

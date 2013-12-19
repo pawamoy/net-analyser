@@ -21,6 +21,31 @@
 #define UDP_LEN 28
 #define TCP_LEN 40
 
+typedef struct str_trace {
+	FILE* logfile;
+	char probe;
+	int rcvt,
+		sndt,
+		min_ttl,
+		max_ttl,
+		hops,
+		attempts;
+} StrTrace;
+
+typedef struct str_traceroute {
+	char *address,
+		 *myip,
+		 *ipstr;
+	int portno;
+	StrTrace s;
+} StrTraceRoute;
+
+StrTrace NewTrace(void);
+
+StrTraceRoute NewTraceRoute(void);
+
+typedef struct sockaddr_in Sockin;
+
 typedef int Socket;
 
 /**\brief Show usage of the program
@@ -101,8 +126,7 @@ void ConstructTCPHeader(struct tcphdr *tcph);
  * \param my_addr Source data
  * \return Last used TTL value, or -1 if unreached destination
  */
-int LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
-             struct sockaddr_in server, struct sockaddr_in my_addr);
+int LoopTrace(StrTrace s, Sockin server, Sockin my_addr);
 
 /**\brief Launch the traceroute program
  * \param address Address/domain to trace
@@ -114,10 +138,9 @@ int LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
  * \param rcv_timeout Timer for receving data
  * \param snd_timeout Timer for sending data
  * \param attempt Number of attempts when failure
- //~ * \param log_data Log data (1) or not (0)
+ * \param logfile Pointer to FILE for data logs (can be NULL)
  * \return 0 on success
  */
-int main_traceroute(char* address, int portno, int min_ttl, int max_ttl, int hops, char probe,
-	                int rcv_timeout, int snd_timeout, int attempt/*, int log_data*/);
+int main_traceroute(StrTraceRoute tr);
 
 #endif // __TRACEROUTE_H

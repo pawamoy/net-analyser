@@ -6,13 +6,13 @@
 
 #include "../include/log.h"
 
+static FILE* logfile = NULL;
+
 char* GetDate()
 {
     time_t rawtime;
     struct tm * timeinfo;
-    char* date;
-    char* space;
-    char* lf;
+    char *date, *space, *lf;
 
     time(&rawtime);
     timeinfo = localtime(&rawtime);
@@ -34,10 +34,11 @@ FILE* OpenLog()
 {
     char logpath[1024];
     snprintf(logpath, 1024, "%s%s%s", LOGFILE, GetDate(), "\0");
-    return fopen(logpath, "w");
+    logfile = fopen(logpath, "w");
+    return logfile;
 }
 
-int CloseLog(FILE* logfile)
+int CloseLog()
 {
     return fclose(logfile);
 }
