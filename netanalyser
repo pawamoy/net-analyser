@@ -1,5 +1,5 @@
 #!/bin/bash
-if [ ! -f bin/netanalyser ]; then
+if [ ! -f bin/main ]; then
 	make && /usr/bin/sudo bin/main $*
 else
 	/usr/bin/sudo bin/main $*
