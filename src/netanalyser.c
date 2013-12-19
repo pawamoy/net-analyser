@@ -29,11 +29,15 @@ int ping(char* address, int threshold, int frequency, int attempts, int* best_tt
 	return LOSS;
 }
 
-int HostIsJoinable(char* address, int max_ping, int attempts)
+int HostIsJoinable(char* dest, char* source, int max_ping, int attempts)
 {
 	//-----------------------------------------------------//
 	// variable declaration
 	//-----------------------------------------------------//
+	Sockin server  = { 0 },
+           my_addr = { 0 },
+           recept  = { 0 };
+           
 	struct timeval r_timeout = { 1, 0 },
                    s_timeout = { 1, 0 };
     
@@ -42,20 +46,26 @@ int HostIsJoinable(char* address, int max_ping, int attempts)
            
     socklen_t addrlen = sizeof(Sockin);
     
-    Sockin recept = { 0 };
-    
     char recvbuf[MAX_PACKET] = { 0 },
          packet[MAX_PACKET]  = { 0 },
         *rsaddr              = NULL;
     
-    char source[MAX_ADDRESS];
-    strcpy(source, inet_ntoa(my_addr.sin_addr));
-    
     int reach_dest = 0,
         att        = 0,
+        portno     = 80,
         bytes      = ICMP_LEN;
         
+	
+	// init remote addr structure
+    server.sin_family = AF_INET;
+    server.sin_port = htons(portno);
+    inet_aton(dest, &(server.sin_addr));
 
+	// init local addr structure
+    my_addr.sin_family = AF_INET;
+    my_addr.sin_port = htons(portno);
+    inet_aton(source, &(my_addr.sin_addr));
+	
     //-----------------------------------------------------//
 	// starting attempts loop
 	//-----------------------------------------------------//
@@ -70,7 +80,7 @@ int HostIsJoinable(char* address, int max_ping, int attempts)
 			exit(-1);
 		}
 		
-		ConstructIPHeader((struct iphdr*)packet, max_ping, source, address, 'i');
+		ConstructIPHeader((struct iphdr*)packet, max_ping, source, dest, 'i');
 		ConstructICMPHeader((struct icmphdr*)(packet+sizeof(struct iphdr)));
 		if ( ! SetHDRINCL(send_socket))                  exit(-1);
 		if ( ! SetSNDTimeOut(send_socket, s_timeout))    exit(-1);
@@ -84,7 +94,7 @@ int HostIsJoinable(char* address, int max_ping, int attempts)
 			if (recvfrom(receive_socket, recvbuf, MAX_PACKET, 0, (struct sockaddr*)&recept, &addrlen) != -1)
 			{
 				rsaddr = inet_ntoa(recept.sin_addr);				
-				if (strcmp(address, rsaddr)==0)
+				if (strcmp(dest, rsaddr)==0)
 					reach_dest = 1;
 			}
 		}

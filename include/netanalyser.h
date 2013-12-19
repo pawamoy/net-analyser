@@ -26,12 +26,13 @@ void handler(int signum);
 int ping(char* address, int threshold, int frequency, int attempts, int* best_ttl);
 
 /**\brief Test if host specified by address is joinable (ICMP probes)
- * \param address Domain name / IP address
+ * \param dest Destination IP address
+ * \param source My IP address
  * \param max_ping TTL to use
  * \param attempts Number of attempts if no response
  * \return 1 if joinable, 0 else
  * \author tim
  */
-int HostIsJoinable(char* address, int max_ping, int attempts);
+int HostIsJoinable(char* dest, char* source, int max_ping, int attempts);
 
 #endif // __NETANALYSER_H
