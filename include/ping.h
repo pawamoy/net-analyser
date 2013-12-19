@@ -23,6 +23,10 @@
 #define LONGHDR_ICMP 8
 #define IP_MAXPACKET 1024
 
+#define DELAY   1
+#define LOSS    2
+#define FAILURE 3
+
 /**\brief Show usage of the ping program
  */
 void UsagePing(void);

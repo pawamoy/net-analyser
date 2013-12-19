@@ -12,6 +12,18 @@ void UsageTraceroute()
     exit(-1);
 }
 
+StrTrace NewTrace()
+{
+	StrTrace s = {NULL,'i',3,3,1,30,1,3};
+	return s;
+}
+
+StrTraceRoute NewTraceRoute()
+{
+	StrTraceRoute t = {NULL,NULL,NULL,80,NewTrace()};
+	return t;
+}
+
 int SetTTL(Socket s, int ttl)
 {
     const int *ttl_p = &ttl;
@@ -172,11 +184,10 @@ void ConstructTCPHeader(struct tcphdr *tcph)
     tcph->urg_ptr = 0;
 }
  
-int LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
-             struct sockaddr_in server, struct sockaddr_in my_addr)
+int LoopTrace(StrTrace s, Sockin server, Sockin my_addr)
 {
-	struct timeval r_timeout = { rcvt, 0 };
-    struct timeval s_timeout = { sndt, 0 };
+	struct timeval r_timeout = { s.rcvt, 0 };
+    struct timeval s_timeout = { s.sndt, 0 };
     
     Socket send_socket, receive_socket;
     socklen_t addrlen = sizeof (struct sockaddr_in);
@@ -194,17 +205,25 @@ int LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
     
     int reach_dest = 0;
     int received = 0;
-    int att, attempt = ttl_t[3];
-    int ttl, min_ttl = ttl_t[0], max_ttl = ttl_t[1], hops = ttl_t[2];
+    int att;//, attempt = ttl_t[3];
+    int ttl;//, min_ttl = ttl_t[0], max_ttl = ttl_t[1], hops = ttl_t[2];
     int bytes = 0;
     
-    for (ttl = min_ttl; ttl <= max_ttl; ttl += hops)
+    int cur_pad, padding = 19;
+    
+    for (ttl = s.min_ttl; ttl <= s.max_ttl; ttl += s.hops)
     {
 		printf("%2d  ", ttl);
 		fflush(stdout);
-		for (att = 0; att < attempt; att++)
+		
+		if (s.logfile != NULL)
+			fprintf(s.logfile, "%2d  ", ttl);
+		
+		cur_pad = padding;
+			
+		for (att = 0; att < s.attempts; att++)
 		{
-			switch (probe)
+			switch (s.probe)
 			{
 				case 'u':
 					bytes = UDP_LEN;
@@ -229,7 +248,7 @@ int LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
 				exit(-1);
 			}
 			
-			switch (probe)
+			switch (s.probe)
 			{
 				case 'u':
 					if ( ! SetTTL(send_socket, ttl))
@@ -263,20 +282,21 @@ int LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
 					printf("* ");
 					fflush(stdout);
 					
-					if (logfile != NULL)
-						fprintf(logfile, "* ");
-
+					if (s.logfile != NULL)
+						fprintf(s.logfile, "* ");
+					
+					cur_pad -= 2;
 				}
 				else
 				{
 					received = 1;
 					rsaddr = inet_ntoa(recept.sin_addr);
 					host = GetHostNameFromIP(rsaddr);
-					printf("%-15s %s", rsaddr, host);
+					printf("%-*s %s", cur_pad, rsaddr, host);
 					fflush(stdout);
 					
-					if (logfile != NULL)
-						fprintf(logfile, " %-2d %-15s %s\n", ttl, rsaddr, host);
+					if (s.logfile != NULL)
+						fprintf(s.logfile, "%-*s %s", cur_pad, rsaddr, host);
 
 					if (strcmp(dest, rsaddr)==0)
 						reach_dest = 1;
@@ -290,33 +310,31 @@ int LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
 				break;
 		}
 		
-		printf("\n");	
+		printf("\n");
+		if (s.logfile != NULL)
+			fprintf(s.logfile, "\n");
+			
 		if (reach_dest) return ttl;
 	}
 	
 	return -1;
 }
 
-int main_traceroute(char* address, int portno, int min_ttl, int max_ttl, int hops, char probe,
-	                int rcv_timeout, int snd_timeout, int attempt/*, int log_data*/)
+int main_traceroute(StrTraceRoute tr)
 {
 	//-----------------------------------------------------//
 	// variable declaration
 	//-----------------------------------------------------//
-    struct sockaddr_in server, my_addr;
-    int                domain       = AF_INET,
-                       bytes        = 0,
-                       best_ttl     = -1;
-    char              *ipstr        = NULL,
-                      *myip         = NULL;
-    FILE              *logfile      = NULL;
-    //~ uid_t              uid;
+    Sockin server,
+           my_addr;
+    int    domain   = AF_INET,
+           bytes    = 0;
 
 
 	//-----------------------------------------------------//
 	// get packets length
 	//-----------------------------------------------------//
-	switch (probe) {
+	switch (tr.s.probe) {
 		case 'u': bytes = UDP_LEN;  break;
 		case 'i': bytes = ICMP_LEN;	break;
 		case 't': bytes = TCP_LEN;	break; 
@@ -325,54 +343,27 @@ int main_traceroute(char* address, int portno, int min_ttl, int max_ttl, int hop
 
 
 	//-----------------------------------------------------//
-	// first information outputs and log
+	// first information outputs
 	//-----------------------------------------------------//
+    printf("traceroute to %s (%s), %d hops max, %d byte packets\n", tr.address, tr.ipstr, tr.s.max_ttl, bytes);
 	
-	// get infos
-    ipstr = GetIPFromHostname(address);
-    myip = GetMyIP();
-    
-    // stdout
-    printf("traceroute to %s (%s), %d hops max, %d byte packets\n", address, ipstr, max_ttl, bytes);
-    
-	// opens a log file, exit if error
-	//~ if (log_data == 1)
-	//~ {
-		//~ logfile = OpenLog();
-		//~ if (logfile == NULL) exit(-1);
-		//~ fprintf(logfile, "Domain: %s\n", address);
-		//~ fprintf(logfile, "Resolved IP address: %s\n", ipstr);
-		//~ fprintf(logfile, "My IP address: %s\n", myip);
-	//~ }
-
-
 	//-----------------------------------------------------//
 	// initializing some data
 	//-----------------------------------------------------//
 	
     // init remote addr structure and other params
     server.sin_family = domain;
-    server.sin_port = htons(portno);
-    inet_aton(ipstr, &(server.sin_addr));
+    server.sin_port = htons(tr.portno);
+    inet_aton(tr.ipstr, &(server.sin_addr));
 
 	// init local addr structure
-    my_addr.sin_family = AF_INET;
-    my_addr.sin_port = htons(portno);
-    inet_aton(myip, &(my_addr.sin_addr));
+    my_addr.sin_family = domain;
+    my_addr.sin_port = htons(tr.portno);
+    inet_aton(tr.myip, &(my_addr.sin_addr));
     
     
     //-----------------------------------------------------//
 	// starting traceroute
 	//-----------------------------------------------------//
-	int ttl_t[4] = {min_ttl, max_ttl, hops, attempt};
-	best_ttl = LoopTrace(rcv_timeout, snd_timeout, ttl_t, logfile, probe, server, my_addr);
-	
-	
-	//-----------------------------------------------------//
-	// close log file
-	//-----------------------------------------------------//
-    //~ if (log_data == 1)
-		//~ CloseLog(logfile);
-
-    return best_ttl;
+	return LoopTrace(tr.s, server, my_addr);
 }

@@ -8,10 +8,6 @@
 #include "../include/traceroute.h"
 #include "../include/log.h" 
 
-#define DELAY   1
-#define LOSS    2
-#define FAILURE 3
-
 /* principe:
  * ping pour vérifier la joignabilité de l'hôte
  * première découverte de route (simple affichage + permet de récup le ttl min) + log
@@ -56,25 +52,38 @@
  * end if
  */
 
+int loop = 1;
+
 void ShowStatistics(void);
 void ShowStatistics()
 {
 	printf("Statistics :D\n");
 }
 
+void handler(int signum);
+void handler(int signum)
+{
+	ShowStatistics();
+	CloseLog();
+	exit(signum);
+}
+
 int ping(char* address, int threshold, int frequency, int attempts, int* best_ttl);
 int ping(char* address, int threshold, int frequency, int attempts, int* best_ttl)
 {
 	int i;
-	for (i=0; i<10; i++)
+	for (i=0; i<2; i++)
 	{
 		printf("Ping at %s with a threshold of %d%%, a frequency of %d, %d attempts if packets are lost, and a max ttl of %d\n",
 			address, threshold, frequency, attempts, *best_ttl);
 		sleep(frequency);
 	}
-	return DELAY;
+	return LOSS;
 }
 
+/* This function try attempts times to join address with a TTL of max_ping
+ * Returns 1 if joined, 0 else
+ */
 int HostIsJoinable(char* address, int max_ping, int attempts);
 int HostIsJoinable(char* address, int max_ping, int attempts)
 {
@@ -87,23 +96,18 @@ int main(int argc, char* argv[]) {
 	// variable declaration
 	//-----------------------------------------------------//
 	int best_ttl    = 0; // ttl minimal trouvé pour atteindre la destination
-	int cur_ttl     = 30; // ttl pour traceroute
 	int attempts    = 5; // tentatives en cas de perte pour ping (0=infini)
 	int max_ping    = 64; // ttl vérification joignabilité de l'hôte distant
 	int frequency   = 1; // fréquence inter-sonde pour ping
 	int threshold   = 25;
 	
-	int portno = 80;
-	char probe = 'i';
-	int rcv_timeout = 1;
-	int snd_timeout = 1;
-	int attempts_t = 3;
+	StrTraceRoute tr = NewTraceRoute();
 	
-    //~ struct sigaction sigIntHandler;
-    //~ sigIntHandler.sa_handler = handler;
-	//~ sigemptyset(&sigIntHandler.sa_mask);
-	//~ sigIntHandler.sa_flags = 0;
-	//~ sigaction(SIGINT, &sigIntHandler, NULL);
+    struct sigaction sigIntHandler;
+    sigIntHandler.sa_handler = handler;
+	sigemptyset(&sigIntHandler.sa_mask);
+	sigIntHandler.sa_flags = 0;
+	sigaction(SIGINT, &sigIntHandler, NULL);
 	
 	//-----------------------------------------------------//
 	// first verifications
@@ -112,7 +116,23 @@ int main(int argc, char* argv[]) {
 	/* analyse des arguments
 	 * séparation arg ping et arg traceroute
 	 */
-	 
+	
+	//-----------------------------------------------------//
+	// log file
+	//-----------------------------------------------------//
+	tr.s.logfile = OpenLog();
+	if (tr.s.logfile == NULL) exit(-1);
+	
+	// get infos
+	tr.address = argv[1];
+    tr.ipstr = GetIPFromHostname(argv[1]);
+    tr.myip = GetMyIP();
+    
+	fprintf(tr.s.logfile, "Domain: %s\n", tr.address);
+	fprintf(tr.s.logfile, "Resolved IP address: %s\n", tr.ipstr);
+	fprintf(tr.s.logfile, "My IP address: %s\n", tr.myip);
+	
+
 	//-----------------------------------------------------//
 	// start program
 	//-----------------------------------------------------//
@@ -125,13 +145,12 @@ int main(int argc, char* argv[]) {
 	 */
 	if (HostIsJoinable(argv[1], max_ping, attempts))
 	{
-		for (;;)
+		while (loop)
 		{
 			/* STEP 2: SIMPLE TRACEROUTE WITH BIG TTL(30)
 			 * the called function should return the last TTL value, or -1 if failure
 			 */
-			best_ttl = main_traceroute(argv[1], portno, 1, cur_ttl, 1, probe,
-	                                   rcv_timeout, snd_timeout, attempts_t);
+			best_ttl = main_traceroute(tr);
 			
 			if (best_ttl == -1)
 			{
@@ -139,8 +158,7 @@ int main(int argc, char* argv[]) {
 				if (HostIsJoinable(argv[1], max_ping, attempts))
 					printf("Traceroute protocol issue\n");
 				
-				ShowStatistics();
-				exit(-1);
+				loop = 0;
 			}
 			else
 			{
@@ -154,24 +172,21 @@ int main(int argc, char* argv[]) {
 				 */
 				switch (ping(argv[1], threshold, frequency, attempts, &best_ttl))
 				{
-					case DELAY:                       continue;
-					case LOSS:    cur_ttl = best_ttl; continue;
+					case DELAY:                          continue;
+					case LOSS:    tr.s.max_ttl=best_ttl; continue;
 					case FAILURE:
-					default:
-						ShowStatistics();
-						exit(-1);
+					default:      loop = 0;
 				}
 			}
 			/* STEP 4: loop until destination can't be reach or SIGINT
 			 */	
 		}
 	}
-	else
-	{
-		ShowStatistics();
-		exit(-1);
-	}
 	
+	//-----------------------------------------------------//
+	// close log file
+	//-----------------------------------------------------//
+	CloseLog();
 	
 	return 0;
 }

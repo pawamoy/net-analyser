@@ -25,11 +25,10 @@ char* GetDate(void);
  */
 FILE* OpenLog(void);
 
-/**\brief Closes a log file
- * \param logfile The log file to close
+/**\brief Closes log file
  * \return fclose return code (success:0, failure:EOF)
  */
-int CloseLog(FILE* logfile);
+int CloseLog(void);
 
 //~ /**\brief Appends a string and a line feed in a log file.
  //~ * If the string is NULL, writes a line feed
