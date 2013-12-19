@@ -104,10 +104,19 @@ void LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
              struct sockaddr_in server, struct sockaddr_in my_addr);
 
 /**\brief Launch the traceroute program
- * \param argc Number of args
- * \param argv List of args
+ * \param address Address/domain to trace
+ * \param portno Port number
+ * \param min_ttl First ttl to begin with
+ * \param max_ttl Last ttl to end with
+ * \param hops Increasing hops at each iteration
+ * \param probe Probe method: i/u/t
+ * \param rcv_timeout Timer for receving data
+ * \param snd_timeout Timer for sending data
+ * \param attempt Number of attempts when failure
+ * \param log_data Log data (1) or not (0)
  * \return 0 on success
  */
-int main_traceroute(int argc, char* argv[]);
+int main_traceroute(char* address, int portno, int min_ttl, int max_ttl, int hops, char probe,
+	                int rcv_timeout, int snd_timeout, int attempt, int log_data);
 
 #endif // __TRACEROUTE_H

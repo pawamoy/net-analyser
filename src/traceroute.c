@@ -295,151 +295,29 @@ void LoopTrace(int rcvt, int sndt, int ttl_t[4], FILE* logfile, char probe,
 	}
 }
 
-int main_traceroute(int argc, char* argv[])
+int main_traceroute(char* address, int portno, int min_ttl, int max_ttl, int hops, char probe,
+	                int rcv_timeout, int snd_timeout, int attempt, int log_data)
 {
 	//-----------------------------------------------------//
 	// variable declaration
 	//-----------------------------------------------------//
-    struct sockaddr_in server,
-                       my_addr;
+    struct sockaddr_in server, my_addr;
     int                domain       = AF_INET,
-                       portno       = 80,
-                       min_ttl      = 1,
-                       max_ttl      = 30,
-                       hops         = 1,
-					   rcv_timeout  = 3,
-					   snd_timeout  = 3,
-                       attempt      = 3,
-                       i            = 0,
-                       bytes        = 0,
-                       log_data     = 0;
+                       bytes        = 0;
     char              *ipstr        = NULL,
-                      *myip         = NULL,
-                      probe         = 'i';
+                      *myip         = NULL;
     FILE              *logfile      = NULL;
     //~ uid_t              uid;
 
 
 	//-----------------------------------------------------//
-	// first verifications
+	// get packets length
 	//-----------------------------------------------------//
-	
-    // check the number of args on command line
-    if (argc < 2) UsageTraceroute();
-
-    // check root privileges
-    //~ uid = getuid();
-    //~ setuid(uid);
-    if (getuid()) {
-        fprintf(stderr, "\nError: you must be root to use raw sockets\n");
-        exit(-1);
-    }
-    
-    // argument analysis
-    for (i=2; i<argc; i++)
-    {
-		     if (strcmp(argv[i], "-m") == 0 ||
-		         strcmp(argv[i], "--maxttl") == 0) {
-					if (i+1<argc) {
-						max_ttl = atoi(argv[i+1]); i++;
-					} else {
-						fprintf(stderr, "-m: missing value: INT>0\n");
-						exit(-1);
-					}
-				}
-		else if (strcmp(argv[i], "-n") == 0 ||
-		         strcmp(argv[i], "--minttl") == 0) {
-					if (i+1<argc) {
-						min_ttl = atoi(argv[i+1]); i++;
-					} else {
-						fprintf(stderr, "-n: missing value: INT>0\n");
-						exit(-1);
-					}
-				}
-		else if (strcmp(argv[i], "-h") == 0 ||
-		         strcmp(argv[i], "--hops") == 0) {
-					if (i+1<argc) {
-						hops = atoi(argv[i+1]); i++;
-					} else {
-						fprintf(stderr, "-h: missing value: INT>0\n");
-						exit(-1);
-					}
-				}
-		else if (strcmp(argv[i], "-r") == 0 ||
-		         strcmp(argv[i], "--recv-timeout") == 0) {
-					if (i+1<argc) {
-						rcv_timeout = atoi(argv[i+1]); i++;
-					} else {
-						fprintf(stderr, "-r: missing value: INT>0\n");
-						exit(-1);
-					}
-				}
-		else if (strcmp(argv[i], "-s") == 0 ||
-		         strcmp(argv[i], "--send-timeout") == 0) {
-					if (i+1<argc) {
-						snd_timeout = atoi(argv[i+1]); i++;
-					} else {
-						fprintf(stderr, "-s: missing value: INT>0\n");
-						exit(-1);
-					}
-				}
-		else if (strcmp(argv[i], "-l") == 0 ||
-		         strcmp(argv[i], "--log") == 0) log_data = 1;
-		else if (strcmp(argv[i], "-p") == 0 ||
-		         strcmp(argv[i], "--port") == 0) {
-					if (i+1<argc) {
-						portno = atoi(argv[i+1]); i++;
-					} else {
-						fprintf(stderr, "-p: missing value: INT\n");
-						exit(-1);
-					}
-				}
-		else if (strcmp(argv[i], "-b") == 0 ||
-		         strcmp(argv[i], "--probe") == 0) {
-					if (i+1<argc) {
-						probe = tolower(argv[i+1][0]); i++;
-					} else {
-						fprintf(stderr, "-b: missing value: ICMP|TCP|UDP\n");
-						exit(-1);
-					}
-				}
-		else if (strcmp(argv[i], "-a") == 0 ||
-		         strcmp(argv[i], "--attempt") == 0) {
-					if (i+1<argc) {
-						attempt = atoi(argv[i+1]); i++;
-					} else {
-						fprintf(stderr, "-a: missing value: INT>0\n");
-						exit(-1);
-					}
-				}
-		else {
-			fprintf(stderr, "%s: unknown option\n", argv[i]);
-			UsageTraceroute();
-		}
-	}
-	
-	switch (min_ttl && max_ttl && hops && rcv_timeout && snd_timeout && attempt)
-	{
-		case 0:
-			fprintf(stderr, "All TTL values (min, max, hops), Timers (recv, send) and Attempts MUST BE greater than 0 !\n");
-			exit(-1);
-		default:
-			break;
-	}
-	
 	switch (probe) {
-		case 'u':
-			bytes = UDP_LEN;
-			break;
-		case 'i':
-			bytes = ICMP_LEN;
-			break;
-		case 't':
-			bytes = TCP_LEN;
-			break; 
-		default :
-			fprintf(stderr, "%c: invalid probe method: use with 'udp', 'icmp' (default) or 'tcp'\n", probe);
-			exit(-1);
+		case 'u': bytes = UDP_LEN;  break;
+		case 'i': bytes = ICMP_LEN;	break;
+		case 't': bytes = TCP_LEN;	break; 
+		default :                   break;
 	}
 
 
@@ -448,18 +326,18 @@ int main_traceroute(int argc, char* argv[])
 	//-----------------------------------------------------//
 	
 	// get infos
-    ipstr = GetIPFromHostname(argv[1]);
+    ipstr = GetIPFromHostname(address);
     myip = GetMyIP();
     
     // stdout
-    printf("traceroute to %s (%s), %d hops max, %d byte packets\n", argv[1], ipstr, max_ttl, bytes);
+    printf("traceroute to %s (%s), %d hops max, %d byte packets\n", address, ipstr, max_ttl, bytes);
     
 	// opens a log file, exit if error
 	if (log_data == 1)
 	{
 		logfile = OpenLog();
 		if (logfile == NULL) exit(-1);
-		fprintf(logfile, "Domain: %s\n", argv[1]);
+		fprintf(logfile, "Domain: %s\n", address);
 		fprintf(logfile, "Resolved IP address: %s\n", ipstr);
 		fprintf(logfile, "My IP address: %s\n", myip);
 	}
@@ -484,16 +362,9 @@ int main_traceroute(int argc, char* argv[])
 	// starting traceroute
 	//-----------------------------------------------------//
 	int ttl_t[4] = {min_ttl, max_ttl, hops, attempt};
+	LoopTrace(rcv_timeout, snd_timeout, ttl_t, logfile, probe, server, my_addr);
 	
-	switch (probe) {
-		case 'u':
-		case 'i':
-		case 't':
-			LoopTrace(rcv_timeout, snd_timeout, ttl_t, logfile, probe, server, my_addr);
-			break;
-		default: 
-			break;
-	}
+	
 	//-----------------------------------------------------//
 	// close log file
 	//-----------------------------------------------------//
