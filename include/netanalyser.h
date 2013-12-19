@@ -9,6 +9,11 @@
 #include "../include/traceroute.h"
 #include "../include/log.h"
 
+/**\brief Show usage of netanalyser
+ * \author tim
+ */
+void UsageNetAnalyser(void);
+
 /**\brief Print gathered statistics on stdout
  * \author tim
  */

@@ -22,7 +22,10 @@ int main(int argc, char* argv[]) {
 	//-----------------------------------------------------//
     StrTraceRoute tr = NewTraceRoute();
     int i = 0;
-    char *probe = "icmp"; // see NewTraceRoute for default probe
+    char *icmp  = "icmp";
+    char *udp   = "udp" ;
+    char *tcp   = "tcp" ;
+    char *probe = icmp  ; // see NewTraceRoute for default probe
     
     
     //-----------------------------------------------------//
@@ -41,20 +44,20 @@ int main(int argc, char* argv[]) {
     for (i=2; i<argc; i++)
     {
 		     if (strcmp(argv[i], "-m") == 0 ||
-		         strcmp(argv[i], "--maxttl") == 0) {
+		         strcmp(argv[i], "--max-ttl") == 0) {
 					if (i+1<argc) {
 						tr.s.max_ttl = atoi(argv[i+1]); i++;
 					} else {
-						fprintf(stderr, "-m: missing value: INT>0\n");
+						fprintf(stderr, "-m (max ttl): missing value: INT>0\n");
 						exit(-1);
 					}
 				}
-		else if (strcmp(argv[i], "-n") == 0 ||
-		         strcmp(argv[i], "--minttl") == 0) {
+		else if (strcmp(argv[i], "-f") == 0 ||
+		         strcmp(argv[i], "--first-ttl") == 0) {
 					if (i+1<argc) {
 						tr.s.min_ttl = atoi(argv[i+1]); i++;
 					} else {
-						fprintf(stderr, "-n: missing value: INT>0\n");
+						fprintf(stderr, "-f (first ttl): missing value: INT>0\n");
 						exit(-1);
 					}
 				}
@@ -63,25 +66,25 @@ int main(int argc, char* argv[]) {
 					if (i+1<argc) {
 						tr.s.hops = atoi(argv[i+1]); i++;
 					} else {
-						fprintf(stderr, "-h: missing value: INT>0\n");
+						fprintf(stderr, "-h (hops): missing value: INT>0\n");
 						exit(-1);
 					}
 				}
 		else if (strcmp(argv[i], "-r") == 0 ||
-		         strcmp(argv[i], "--recv-timeout") == 0) {
+		         strcmp(argv[i], "--recv-timer") == 0) {
 					if (i+1<argc) {
 						tr.s.rcvt = atoi(argv[i+1]); i++;
 					} else {
-						fprintf(stderr, "-r: missing value: INT>0\n");
+						fprintf(stderr, "-r (receive timer): missing value: INT>0\n");
 						exit(-1);
 					}
 				}
 		else if (strcmp(argv[i], "-s") == 0 ||
-		         strcmp(argv[i], "--send-timeout") == 0) {
+		         strcmp(argv[i], "--send-timer") == 0) {
 					if (i+1<argc) {
 						tr.s.sndt = atoi(argv[i+1]); i++;
 					} else {
-						fprintf(stderr, "-s: missing value: INT>0\n");
+						fprintf(stderr, "-s (send timer): missing value: INT>0\n");
 						exit(-1);
 					}
 				}
@@ -90,25 +93,28 @@ int main(int argc, char* argv[]) {
 					if (i+1<argc) {
 						tr.portno = atoi(argv[i+1]); i++;
 					} else {
-						fprintf(stderr, "-p: missing value: INT\n");
+						fprintf(stderr, "-p (port): missing value: INT\n");
 						exit(-1);
 					}
 				}
-		else if (strcmp(argv[i], "-b") == 0 ||
-		         strcmp(argv[i], "--probe") == 0) {
-					if (i+1<argc) {
-						probe = argv[i+1]; i++;
-					} else {
-						fprintf(stderr, "-b: missing value: ICMP|TCP|UDP\n");
-						exit(-1);
-					}
+		else if (strcmp(argv[i], "-I") == 0 ||
+		         strcmp(argv[i], "--icmp") == 0) {
+					probe = icmp;
+				}
+		else if (strcmp(argv[i], "-U") == 0 ||
+		         strcmp(argv[i], "--udp") == 0) {
+					probe = udp;
+				}
+		else if (strcmp(argv[i], "-T") == 0 ||
+		         strcmp(argv[i], "--tcp") == 0) {
+					probe = tcp;
 				}
 		else if (strcmp(argv[i], "-a") == 0 ||
 		         strcmp(argv[i], "--attempt") == 0) {
 					if (i+1<argc) {
 						tr.s.attempts = atoi(argv[i+1]); i++;
 					} else {
-						fprintf(stderr, "-a: missing value: INT>0\n");
+						fprintf(stderr, "-a (attempts): missing value: INT>0\n");
 						exit(-1);
 					}
 				}
@@ -128,21 +134,10 @@ int main(int argc, char* argv[]) {
 			break;
 	}
 	
-	// probe method
-	switch (probe[0]) {
-		case 'u':
-		case 'i':
-		case 't':
-			tr.s.probe = probe[0];
-			break;
-		default :
-			fprintf(stderr, "%s: invalid probe method: use with 'udp', 'icmp' (default) or 'tcp'\n", probe);
-			exit(-1);
-	}
-	
 	//-----------------------------------------------------//
-	// get some data and start traceroute
+	// set some data and start traceroute
 	//-----------------------------------------------------//
+	tr.s.probe = probe[0];
 	tr.address = argv[1];
     tr.ipstr = GetIPFromHostname(argv[1]);
     tr.myip = GetMyIP();
