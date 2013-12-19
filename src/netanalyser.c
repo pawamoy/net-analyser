@@ -56,7 +56,6 @@ int HostIsJoinable(char* dest, char* source, int max_ping, int attempts)
         *rsaddr              = NULL;
     
     int reach_dest = 0,
-        att        = 0,
         portno     = 80,
         bytes      = ICMP_LEN;
         
@@ -74,7 +73,7 @@ int HostIsJoinable(char* dest, char* source, int max_ping, int attempts)
     //-----------------------------------------------------//
 	// starting attempts loop
 	//-----------------------------------------------------//
-    for (att=0; att<attempts; att++)
+    do
     {
 		send_socket = OpenRawSocket('i');
 		receive_socket = OpenRawSocket('i');
@@ -109,7 +108,10 @@ int HostIsJoinable(char* dest, char* source, int max_ping, int attempts)
 		
 		if (reach_dest == 1)
 			return 1;
+			
+		attempts--;
 	}
+	while (attempts>=0);
 	
 	return 0;
 }
