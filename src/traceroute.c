@@ -186,31 +186,41 @@ void ConstructTCPHeader(struct tcphdr *tcph)
  
 int LoopTrace(StrTrace s, Sockin server, Sockin my_addr)
 {
-	struct timeval r_timeout = { s.rcvt, 0 };
-    struct timeval s_timeout = { s.sndt, 0 };
+	//-----------------------------------------------------//
+	// variable declaration
+	//-----------------------------------------------------//
+	struct timeval r_timeout = { s.rcvt, 0 },
+                   s_timeout = { s.sndt, 0 };
     
-    Socket send_socket, receive_socket;
-    socklen_t addrlen = sizeof (struct sockaddr_in);
+    Socket send_socket,
+           receive_socket;
+           
+    socklen_t addrlen = sizeof(Sockin);
     
-    struct sockaddr_in recept = { 0 };
+    Sockin recept = { 0 };
     
-    char recvbuf[MAX_PACKET];
-    char packet[MAX_PACKET] = { 0 };
-    char *host = NULL, *rsaddr = NULL;
+    char recvbuf[MAX_PACKET] = { 0 },
+         packet[MAX_PACKET]  = { 0 },
+        *host                = NULL,
+        *rsaddr              = NULL;
     
-    char dest[MAX_ADDRESS];
-    strcpy(dest, inet_ntoa(server.sin_addr));
-    char source[MAX_ADDRESS];
+    char dest[MAX_ADDRESS],
+         source[MAX_ADDRESS];
+         
+    strcpy(dest,   inet_ntoa(server.sin_addr));
     strcpy(source, inet_ntoa(my_addr.sin_addr));
     
-    int reach_dest = 0;
-    int received = 0;
-    int att;//, attempt = ttl_t[3];
-    int ttl;//, min_ttl = ttl_t[0], max_ttl = ttl_t[1], hops = ttl_t[2];
-    int bytes = 0;
+    int reach_dest = 0,
+        received   = 0,
+        att        = 0,
+        ttl        = 0,
+        bytes      = 0,
+        cur_pad    = 0,
+        padding    = 19;
     
-    int cur_pad, padding = 19;
-    
+    //-----------------------------------------------------//
+	// starting loop
+	//-----------------------------------------------------//
     for (ttl = s.min_ttl; ttl <= s.max_ttl; ttl += s.hops)
     {
 		printf("%2d  ", ttl);
@@ -220,7 +230,7 @@ int LoopTrace(StrTrace s, Sockin server, Sockin my_addr)
 			fprintf(s.logfile, "%2d  ", ttl);
 		
 		cur_pad = padding;
-			
+		
 		for (att = 0; att < s.attempts; att++)
 		{
 			switch (s.probe)
@@ -345,7 +355,8 @@ int main_traceroute(StrTraceRoute tr)
 	//-----------------------------------------------------//
 	// first information outputs
 	//-----------------------------------------------------//
-    printf("traceroute to %s (%s), %d hops max, %d byte packets\n", tr.address, tr.ipstr, tr.s.max_ttl, bytes);
+    printf("traceroute to %s (%s), %d hops max, %d byte packets\n",
+		tr.address, tr.ipstr, tr.s.max_ttl, bytes);
 	
 	//-----------------------------------------------------//
 	// initializing some data

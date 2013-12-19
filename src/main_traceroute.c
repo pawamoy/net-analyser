@@ -5,16 +5,7 @@
 
 #include "../include/traceroute.h"
 
-/*
- * Transformer le nom de domaine fourni en adresse IP										DONE
- * SetTTL																					DONE
- * modif champ TTL sur socket																DONE
- * à 0, le routeur renvoie TTL exceeded														OSEF
- * Reverse-DNS pour avoir le nom de routeurs à partir de l'IP								DONE
- * support de TCP, UDP et ICMP																DONE: UDP & ICMP
- * plusieurs modes : pas (nb sauts), fréquence sonde, tentatives, temporisateurs			DONE (fréquence sonde ???)
- * 
- * Ressources internet:
+/* Ressources internet:
  * http://austinmarton.wordpress.com/2011/09/14/sending-raw-ethernet-packets-from-a-specific-interface-in-c-on-linux/
  * http://pwet.fr/man/linux/conventions/raw
  * http://pwet.fr/man/linux/conventions/packet
@@ -28,7 +19,7 @@
  
 int main(int argc, char* argv[]) {
 	//-----------------------------------------------------//
-	// variable declaration
+	// variables declaration
 	//-----------------------------------------------------//
     StrTraceRoute tr = NewTraceRoute();
     int i = 0;
@@ -36,11 +27,13 @@ int main(int argc, char* argv[]) {
     
     
     //-----------------------------------------------------//
-	// first verifications
+	// verifications
 	//-----------------------------------------------------//
-	if (argc < 2) UsageTraceroute(); // usage
-
-    if (getuid() != 0) { // non-root
+	// usage
+	if (argc < 2) UsageTraceroute();
+	
+	// non-root
+    if (getuid() != 0) {
         fprintf(stderr, "\nError: you must be root to use raw sockets\n");
         exit(-1);
     }
@@ -126,6 +119,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	
+	// non-zero values
 	switch (tr.s.min_ttl && tr.s.max_ttl && tr.s.hops && tr.s.rcvt && tr.s.sndt && tr.s.attempts)
 	{
 		case 0:
@@ -135,6 +129,7 @@ int main(int argc, char* argv[]) {
 			break;
 	}
 	
+	// probe method
 	switch (probe[0]) {
 		case 'u':
 		case 'i':
@@ -146,7 +141,9 @@ int main(int argc, char* argv[]) {
 			exit(-1);
 	}
 	
-	// get infos
+	//-----------------------------------------------------//
+	// get some data and start traceroute
+	//-----------------------------------------------------//
 	tr.address = argv[1];
     tr.ipstr = GetIPFromHostname(argv[1]);
     tr.myip = GetMyIP();

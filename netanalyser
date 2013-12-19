@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ ! -f bin/netanalyser ]; then
-	make && /usr/bin/sudo bin/netanalyser $*
+	make && /usr/bin/sudo bin/main $*
 else
-	/usr/bin/sudo bin/netanalyser $*
+	/usr/bin/sudo bin/main $*
 fi
