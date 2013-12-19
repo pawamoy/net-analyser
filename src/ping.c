@@ -88,7 +88,7 @@ int main_ping(StrPing p, int* best_ttl)
     //préparation de l'envoi du paquet
     memset (&my_addr, 0, sizeof (struct sockaddr_in));
     my_addr.sin_family = AF_INET;
-    my_addr.sin_addr.s_addr = hdrip.saddr;//hdrip.dst.s_addr;
+    inet_aton(p.ipstr, &(my_addr.sin_addr));
 
     sd = socket (AF_INET, SOCK_RAW, IPPROTO_ICMP); //IPPROTO_RAW
     

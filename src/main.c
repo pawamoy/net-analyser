@@ -241,6 +241,8 @@ int main(int argc, char* argv[]) {
 			/* STEP 4: loop until destination can't be reach or SIGINT
 			 */	
 		}
+	} else {
+		printf("Host is not joinable\n");
 	}
 	
 	
