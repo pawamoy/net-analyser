@@ -56,6 +56,32 @@
  * end if
  */
 
+void ShowStatistics(void);
+void ShowStatistics()
+{
+	printf("Statistics :D\n");
+}
+
+int ping(char* address, int threshold, int frequency, int attempts, int* best_ttl);
+int ping(char* address, int threshold, int frequency, int attempts, int* best_ttl)
+{
+	int i;
+	for (i=0; i<10; i++)
+	{
+		printf("Ping at %s with a threshold of %d%%, a frequency of %d, %d attempts if packets are lost, and a max ttl of %d\n",
+			address, threshold, frequency, attempts, *best_ttl);
+		sleep(frequency);
+	}
+	return DELAY;
+}
+
+int HostIsJoinable(char* address, int max_ping, int attempts);
+int HostIsJoinable(char* address, int max_ping, int attempts)
+{
+	printf("Host %s is joinable (ttl=%d and attemps=%d)\n", address, max_ping, attempts);
+	return 1;
+}
+
 int main(int argc, char* argv[]) {
 	//-----------------------------------------------------//
 	// variable declaration
@@ -65,10 +91,24 @@ int main(int argc, char* argv[]) {
 	int attempts    = 5; // tentatives en cas de perte pour ping (0=infini)
 	int max_ping    = 64; // ttl vérification joignabilité de l'hôte distant
 	int frequency   = 1; // fréquence inter-sonde pour ping
+	int threshold   = 25;
+	
+	int portno = 80;
+	char probe = 'i';
+	int rcv_timeout = 1;
+	int snd_timeout = 1;
+	int attempts_t = 3;
+	
+    //~ struct sigaction sigIntHandler;
+    //~ sigIntHandler.sa_handler = handler;
+	//~ sigemptyset(&sigIntHandler.sa_mask);
+	//~ sigIntHandler.sa_flags = 0;
+	//~ sigaction(SIGINT, &sigIntHandler, NULL);
 	
 	//-----------------------------------------------------//
 	// first verifications
 	//-----------------------------------------------------//
+	if (argc != 2) exit(-1);
 	/* analyse des arguments
 	 * séparation arg ping et arg traceroute
 	 */
@@ -83,7 +123,7 @@ int main(int argc, char* argv[]) {
 	 * we should provide a number of attempt before returning failure status
 	 * no logs are written here
 	 */
-	if (HostIsJoinable(argv[1], max_ping, attempts)
+	if (HostIsJoinable(argv[1], max_ping, attempts))
 	{
 		for (;;)
 		{
@@ -91,12 +131,12 @@ int main(int argc, char* argv[]) {
 			 * the called function should return the last TTL value, or -1 if failure
 			 */
 			best_ttl = main_traceroute(argv[1], portno, 1, cur_ttl, 1, probe,
-	                                   rcv_timeout, snd_timeout, attempts_t, 1);
+	                                   rcv_timeout, snd_timeout, attempts_t);
 			
 			if (best_ttl == -1)
 			{
 				// destination unreached but host was joinable
-				if (HostIsJoinable(argv[1], max_ping, attempts)
+				if (HostIsJoinable(argv[1], max_ping, attempts))
 					printf("Traceroute protocol issue\n");
 				
 				ShowStatistics();
