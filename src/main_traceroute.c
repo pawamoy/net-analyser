@@ -161,5 +161,5 @@ int main(int argc, char* argv[]) {
 	}
     
 	return main_traceroute(argv[1], portno, min_ttl, max_ttl, hops, probe[0],
-	                       rcv_timeout, snd_timeout, attempt, log_data);
+	                       rcv_timeout, snd_timeout, attempt/*, log_data*/);
 }
