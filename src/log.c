@@ -1,7 +1,5 @@
 /**\file log.c
- * \author tim
  * \brief functions to log informations
- * \date December 11, 2013, 15:01 AM
  */
 
 #include "../include/log.h"
@@ -42,27 +40,4 @@ int CloseLog()
 {
     return fclose(logfile);
 }
-
-//~ int WriteLogLF(FILE* logfile, char* string)
-//~ {
-    //~ int ret = 0;
-    //~ if (string == NULL)
-        //~ ret = fprintf(logfile, "\n");
-    //~ else
-        //~ ret = fprintf(logfile, "%s\n", string);
-//~ 
-    //~ // flush to disk
-    //~ fflush(logfile);
-//~ 
-    //~ return ret;
-//~ }
-//~ 
-//~ int WriteLog(FILE* logfile, char* string)
-//~ {
-    //~ if (string != NULL)
-        //~ return fprintf(logfile, "%s", string);
-//~ 
-    //~ return 0;
-//~ }
-//~ 
 

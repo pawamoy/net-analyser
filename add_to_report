@@ -1,0 +1,43 @@
+/* principe:
+ * ping pour vérifier la joignabilité de l'hôte
+ * première découverte de route (simple affichage + permet de récup le ttl min) + log
+ * puis on fait tourner ping (option de fréquence en ligne de commande) + log
+ * changement de TTL / variation de délai -> re-découverte de route
+ * on répète jusqu'à Ctrl-C : affichage de statistiques (voir vrai ping)
+ *     du genre % perte, délai, min max moy, routes, etc...
+ * estimation asymétrie entres routes allers et retours
+ */
+
+/* PSEUDO-CODE:
+ * 
+ * cur_ttl := 30
+ * N := 5
+ * 
+ * if HostIsJoinable ( TTL:=64 )
+ *  	begin loop
+ *  		best_ttl := traceroute ( TTL:=cur_ttl )
+ *  		if destination reached
+ *  			while ping ( TTL:=best_ttl ) ;
+ *  			case changed delay
+ *  				continue loop
+ *  			case packet loss
+ *  				for N attempts
+ *  					best_ttl++
+ *  					if ping ( TTL:=best_ttl )
+ *  						cur_ttl := best_ttl
+ *  						continue loop
+ * 						end if
+ *  				end for
+ *  				print info and exit
+ * 				end case
+ *  		else
+ *  			if HostIsJoinable ( TTL:=64 )
+ *  				print protocol problem
+ *  			end if
+ *  			print info and exit
+ *  		end if
+ * 		end loop
+ * else
+ *  	print info and exit
+ * end if
+ */

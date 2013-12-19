@@ -1,7 +1,5 @@
 /**\file ping.h
- * \author val
  * \brief ping functions (header)
- * \date December 14, 2013, 14:45 AM
  */
 
 #ifndef __PING_H
@@ -28,18 +26,21 @@
 #define FAILURE 3
 
 /**\brief Show usage of the ping program
+ * \author val
  */
 void UsagePing(void);
 
 /**\brief Launch the ping program
  * \param address Address/domain to ping
  * \return 0
+ * \author val
  */
 int main_ping(char* address);
 
 /**\brief SIGINT handler
  * \param sig
  * \return void
+ * \author val
  */
 void handlerArret(int s);
 

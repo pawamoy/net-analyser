@@ -1,7 +1,5 @@
 /**\file main_ping.c
- * \author val
  * \brief ping main
- * \date December 10, 2013, 10:37 AM
  */
 
 #include "../include/ping.h"
