@@ -28,11 +28,10 @@
 void UsagePing(void);
 
 /**\brief Launch the ping program
- * \param argc Number of args
- * \param argv List of args
+ * \param address Address/domain to ping
  * \return 0
  */
-int main_ping(int argc, char* argv[]);
+int main_ping(char* address);
 
 /**\brief SIGINT handler
  * \param sig
