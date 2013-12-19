@@ -15,5 +15,15 @@
  */
 
 int main(int argc, char* argv[]) {
-	return main_ping(argc, argv);
+	//vérification arg
+    if (argc != 2) UsagePing();   
+	
+    //vérif. root
+    if (getuid())
+    {
+        fprintf(stderr, "\nError: you must be root to use raw sockets\n");
+        exit(-1);
+    }
+    
+	return main_ping(argv[1]);
 }
