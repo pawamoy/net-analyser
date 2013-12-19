@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
 	 * we should provide a number of attempt before returning failure status
 	 * no logs are written here
 	 */
-	if (HostIsJoinable(argv[1], max_ping, attempts))
+	if (HostIsJoinable(tr.ipstr, tr.myip, max_ping, attempts))
 	{
 		while (loop)
 		{
@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
 			if (best_ttl == -1)
 			{
 				// destination unreached but host was joinable
-				if (HostIsJoinable(argv[1], max_ping, attempts))
+				if (HostIsJoinable(tr.ipstr, tr.myip, max_ping, attempts))
 					printf("Traceroute protocol issue\n");
 				
 				loop = 0;
