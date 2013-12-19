@@ -20,9 +20,6 @@
 #define UDP_LEN 28
 #define TCP_LEN 40
 
-typedef struct sockaddr_in Sockin;
-typedef int Socket;
-
 /**\struct Structure for LoopTrace
  * \see LoopTrace
  * \see NewTrace
@@ -66,7 +63,7 @@ StrTrace NewTrace(void);
  */
 StrTraceRoute NewTraceRoute(void);
 
-/**\brief Show usage of the program
+/**\brief Show usage of traceroute
  * \author tim
  */
 void UsageTraceroute(void);

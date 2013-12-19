@@ -4,6 +4,11 @@
 
 #include "../include/netanalyser.h"
 
+void UsageNetAnalyser()
+{
+	fprintf(stderr, "usage: netanalyser servername [TRACEROUTE OPTIONS] [PING OPTIONS]\n");
+	exit(-1);
+}
 
 void ShowStatistics()
 {

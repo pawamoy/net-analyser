@@ -19,6 +19,9 @@
 
 #define MAX_ADDRESS 128
 
+typedef struct sockaddr_in Sockin;
+typedef int Socket;
+
 /**\brief Get IP from an hostname (ie. google.fr)
  * \param hostname String of domain name
  * \return NULL on error, a pointer to char

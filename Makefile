@@ -13,7 +13,7 @@ vpath %.h include/
 vpath %.o obj/
 vpath main_% bin/
 vpath main bin/
-vpath %.a lib/
+
 
 main : main.o netanalyser.o traceroute.o ping.o common.o log.o | bin
 	/usr/bin/gcc $(CFLAGS) -o $@ $(OPATH)main.o $(OPATH)netanalyser.o $(OPATH)traceroute.o $(OPATH)ping.o $(OPATH)common.o $(OPATH)log.o
@@ -26,6 +26,9 @@ main_ping : main_ping.o ping.o common.o log.o | bin
 main_traceroute : main_traceroute.o traceroute.o common.o log.o | bin
 	/usr/bin/gcc $(CFLAGS) -o $@ $(OPATH)main_traceroute.o $(OPATH)traceroute.o $(OPATH)common.o $(OPATH)log.o
 	/bin/mv $@ bin/
+
+all : main main_ping main_traceroute
+	
 
 main.o : main.c netanalyser.h traceroute.h ping.h common.h log.h
 main_traceroute.o : main_traceroute.c traceroute.h common.h log.h
@@ -45,9 +48,6 @@ doc :
 
 obj : 
 	/bin/mkdir obj
-
-lib : 
-	/bin/mkdir lib
 
 bin : 
 	/bin/mkdir bin
