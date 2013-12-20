@@ -5,6 +5,9 @@
 #include "../include/traceroute.h"
 #include "../include/log.h"
 
+#define PCKT_LEN 8192
+char buffer[PCKT_LEN] = {0};
+
 void UsageTraceroute()
 {
     fprintf(stderr, "usage: traceroute servername [-b icmp|udp|tcp] [-p PORT] [-n MIN_TTL] [-m MAX_TTL] [-h HOPS] [-r SEC] [-s SEC]\n");
@@ -15,6 +18,17 @@ StrTrace NewTrace()
 {
 	StrTrace s = {NULL,'i',3,3,1,30,1,3};
 	return s;
+}
+
+// Simple checksum function, may use others such as Cyclic Redundancy Check, CRC
+unsigned short csum(unsigned short *buf, int len)
+{
+        unsigned long sum;
+        for(sum=0; len>0; len--)
+                sum += *buf++;
+        sum = (sum >> 16) + (sum &0xffff);
+        sum += (sum >> 16);
+        return (unsigned short)(~sum);
 }
 
 StrTraceRoute NewTraceRoute()
@@ -130,6 +144,8 @@ void ConstructIPHeader(struct iphdr* iph,
     iph->tos = 16; // Low delay
     iph->id = htons(54321);
     iph->ttl = ttl; // hops
+    
+    iph->tot_len = sizeof (struct iphdr);
 
     switch (protocol)
     {
@@ -144,11 +160,13 @@ void ConstructIPHeader(struct iphdr* iph,
         case 't':
         default:
             iph->protocol = 6; // TCP
-            //~ iph->tot_len = sizeof (struct tcphdr);
+            iph->tot_len = sizeof (struct iphdr) + sizeof (struct tcphdr);
+            iph->check = csum((unsigned short *) iph, (sizeof(struct iphdr) + sizeof(struct tcphdr)));
+            iph->check = 0;
             break;
     }
 
-    iph->tot_len = sizeof (struct iphdr);
+
     // Source IP address, can be spoofed
     iph->saddr = inet_addr(source);
     // Destination IP address
@@ -166,9 +184,9 @@ void ConstructICMPHeader(struct icmphdr* icmph)
 void ConstructTCPHeader(struct tcphdr *tcph) 
 {
     //TCP Header
-    tcph->source = htons (1234);
-    tcph->dest = htons (80);
-    tcph->seq = 0;
+    tcph->source = htons (23);
+    tcph->dest = htons (8008);
+    tcph->seq = htonl(1);
     tcph->ack_seq = 0;
     tcph->doff = 5;      /* first and only tcp segment */
     tcph->fin=0;
@@ -177,7 +195,7 @@ void ConstructTCPHeader(struct tcphdr *tcph)
     tcph->psh=0;
     tcph->ack=0;
     tcph->urg=0;
-    tcph->window = htons (5840); /* maximum allowed window size */
+    tcph->window = htons (32767); /* maximum allowed window size */
     tcph->check = 0;/* if you set a checksum to zero, your kernel's IP stack
                 should fill in the correct checksum during transmission */
     tcph->urg_ptr = 0;

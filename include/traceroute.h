@@ -159,4 +159,6 @@ int LoopTrace(StrTrace s, Sockin server, Sockin my_addr);
  */
 int main_traceroute(StrTraceRoute tr);
 
+unsigned short csum(unsigned short *buf, int len);
+
 #endif // __TRACEROUTE_H
