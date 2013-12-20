@@ -15,7 +15,6 @@
 //#include <netinet/ip.h>
 
 #include "../include/common.h"
-#include "../include/log.h"
 
 #define LONGHDR_IP 20
 #define LONGHDR_ICMP 8

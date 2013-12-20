@@ -12,7 +12,6 @@
 #include <unistd.h>
 
 #include "../include/common.h"
-#include "../include/log.h"
 
 #define MAX_PACKET 1024
 
