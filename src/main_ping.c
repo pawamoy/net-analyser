@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
 	// verifications
 	//-----------------------------------------------------//
 	// usage
-    if (argc != 2) UsagePing();   
+    if (argc < 2) UsagePing();   
 	
     // non-root
     if (getuid() != 0)
@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
 					if (i+1<argc) {
 						p.attempts = atoi(argv[i+1]); i++;
 					} else {
-						fprintf(stderr, "-A (Attempts): missing value: INT>0\n");
+						fprintf(stderr, "-A (Attempts): missing value: INT>=0\n");
 						exit(-1);
 					}
 				}
@@ -88,13 +88,10 @@ int main(int argc, char* argv[]) {
 	}
 	
 	// non-zero values
-	switch (p.ttl && p.threshold && p.wait)
+	if (p.ttl<0 || p.threshold<0 || p.wait<0)
 	{
-		case 0:
-			fprintf(stderr, "TTL, threshold and response waiting time MUST BE greater than 0 !\n");
-			exit(-1);
-		default:
-			break;
+		fprintf(stderr, "TTL, threshold and response waiting time MUST BE greater than 0 !\n");
+		exit(-1);
 	}
 	
 	//-----------------------------------------------------//

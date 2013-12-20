@@ -125,13 +125,10 @@ int main(int argc, char* argv[]) {
 	}
 	
 	// non-zero values
-	switch (tr.s.min_ttl && tr.s.max_ttl && tr.s.hops && tr.s.rcvt && tr.s.sndt && tr.s.attempts)
+	if (tr.s.min_ttl<0 || tr.s.max_ttl<0 || tr.s.hops<0 || tr.s.rcvt<0 || tr.s.sndt<0 || tr.s.attempts<0)
 	{
-		case 0:
-			fprintf(stderr, "All TTL values (min, max, hops), Timers (recv, send) and Attempts MUST BE greater than 0 !\n");
-			exit(-1);
-		default:
-			break;
+		fprintf(stderr, "All TTL values (min, max, hops), Timers (recv, send) and Attempts MUST BE greater than 0 !\n");
+		exit(-1);
 	}
 	
 	//-----------------------------------------------------//

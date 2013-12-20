@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
 	FILE* logfile    = NULL;
     struct sigaction action;
 	
-	p.attempts = 0;
+	p.attempts = 5;
 	
 	//-----------------------------------------------------//
 	// verifications
@@ -168,19 +168,15 @@ int main(int argc, char* argv[]) {
 	}
 	
 	// non-zero values
-	switch (tr.s.min_ttl && tr.s.max_ttl && tr.s.hops && tr.s.rcvt && tr.s.sndt && tr.s.attempts) {
-		case 0:
-			fprintf(stderr, "Traceroute: All TTL values (min, max, hops), Timers (recv, send) and Attempts MUST BE greater than 0 !\n");
-			exit(-1);
-		default:
-			break;
+	if (tr.s.min_ttl<0 || tr.s.max_ttl<0 || tr.s.hops<0 || tr.s.rcvt<0 || tr.s.sndt<0 || tr.s.attempts<0)
+	{
+		fprintf(stderr, "All TTL values (min, max, hops), Timers (recv, send) and Attempts MUST BE greater than 0 !\n");
+		exit(-1);
 	}
-	switch (p.ttl && p.threshold && p.wait)	{
-		case 0:
-			fprintf(stderr, "Ping: TTL, threshold and response waiting time MUST BE greater than 0 !\n");
-			exit(-1);
-		default:
-			break;
+	if (p.ttl<0 || p.threshold<0 || p.wait<0)
+	{
+		fprintf(stderr, "TTL, threshold and response waiting time MUST BE greater than 0 !\n");
+		exit(-1);
 	}
 	
 	
@@ -240,6 +236,7 @@ int main(int argc, char* argv[]) {
 				 *  	FAILURE if some probes are lost, and
 				 *  		all attempts failed (destination unreached)
 				 */
+				p.ttl = best_ttl;
 				switch (main_ping(p, &best_ttl)) {
 					case DELAY:                          continue;
 					case LOSS:    tr.s.max_ttl=best_ttl; continue;
