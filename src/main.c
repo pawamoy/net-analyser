@@ -183,7 +183,13 @@ int main(int argc, char* argv[]) {
 	//-----------------------------------------------------//
 	// log file and get some infos
 	//-----------------------------------------------------//
-	if (logdata == 1) {
+	tr.s.probe = probe[0];
+	
+	tr.address = p.address = argv[1];
+    tr.ipstr   = p.ipstr   = GetIPFromHostname(argv[1]);
+    tr.myip    = p.myip    = GetMyIP();
+    
+    if (logdata == 1) {
 		logfile = OpenLog();
 		if (logfile == NULL) exit(-1);
 		tr.s.logfile = p.logfile = logfile;
@@ -192,13 +198,6 @@ int main(int argc, char* argv[]) {
 		fprintf(logfile, "Resolved IP address: %s\n", tr.ipstr);
 		fprintf(logfile, "My IP address: %s\n", tr.myip);
 	}
-	
-	tr.s.probe = probe[0];
-	
-	tr.address = p.address = argv[1];
-    tr.ipstr   = p.ipstr   = GetIPFromHostname(argv[1]);
-    tr.myip    = p.myip    = GetMyIP();
-    
 	
 
 	//-----------------------------------------------------//
