@@ -12,7 +12,7 @@ StrPing NewPing()
 
 void UsagePing(void)
 {
-    fprintf(stderr, "usage: ping servername\n");
+    fprintf(stderr, "usage: ping servername [-i FREQ] [-t TTL] [-W WAIT_RESPONSE] [-A ATTEMPTS] [-d DELAY_THRESHOLD]\n");
     exit(-1);
 }
 

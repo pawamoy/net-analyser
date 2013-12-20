@@ -64,11 +64,11 @@ int main(int argc, char* argv[]) {
 					}
 				}
 		else if (strcmp(argv[i], "-A") == 0 ||
-		         strcmp(argv[i], "--attempts") == 0) {
+		         strcmp(argv[i], "--Attempts") == 0) {
 					if (i+1<argc) {
 						p.attempts = atoi(argv[i+1]); i++;
 					} else {
-						fprintf(stderr, "-A (attempts): missing value: INT>0\n");
+						fprintf(stderr, "-A (Attempts): missing value: INT>0\n");
 						exit(-1);
 					}
 				}

@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
 	// variables declaration
 	//-----------------------------------------------------//
     StrTraceRoute tr = NewTraceRoute();
-    int i = 0;
+    int i, logdata = 0;
     char *icmp  = "icmp";
     char *udp   = "udp" ;
     char *tcp   = "tcp" ;
@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
 					probe = tcp;
 				}
 		else if (strcmp(argv[i], "-a") == 0 ||
-		         strcmp(argv[i], "--attempt") == 0) {
+		         strcmp(argv[i], "--attempts") == 0) {
 					if (i+1<argc) {
 						tr.s.attempts = atoi(argv[i+1]); i++;
 					} else {
