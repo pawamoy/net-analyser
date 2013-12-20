@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
 					probe = tcp;
 				}
 		else if (strcmp(argv[i], "-a") == 0 ||
-		         strcmp(argv[i], "--attempt") == 0) {
+		         strcmp(argv[i], "--attempts") == 0) {
 					if (i+1<argc) {
 						tr.s.attempts = atoi(argv[i+1]); i++;
 					} else {
