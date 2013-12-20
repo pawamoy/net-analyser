@@ -62,4 +62,4 @@ cleanall : clean
 	/bin/rm -rf doc
 
 archive : 
-	/bin/tar -f projetRP.tar.gz -cvz src/*.c include/*.h Makefile Doxyfile
+	/bin/tar -f projetRP.tar.gz -cvz src/*.c include/*.h Makefile Doxyfile netanalyser ping traceroute Rapport.pdf
