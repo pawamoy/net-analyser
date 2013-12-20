@@ -4,6 +4,15 @@
 
 #include "../include/ping.h"
 
+//~ static float rtt_min     = 0;
+//~ static float rtt_max     = 0;
+//~ static float rtt_avg     = 0;
+static int   count       = 0;
+static int   transmitted = 0;
+static int   received    = 0;
+
+static char domain[MAX_ADDRESS] = { 0 };
+
 StrPing NewPing()
 {
 	StrPing p = {1,2,64,-1,25, NULL, NULL, NULL, NULL};
@@ -17,9 +26,11 @@ void UsagePing(void)
 }
 
 void handlerArret(int s){
-           printf("%d\n",s);
-	   printf("--- Affichage stats ping ---");
-           exit(1); 
+	printf("\n--- %s ping statistics ---\n", domain);
+	printf("%d packets transmitted, %d received, %d%% packet loss, time ???ms\n",
+		transmitted, received, (transmitted-received)/transmitted*100);
+	printf("rtt ... in dev\n");
+	exit(s); 
 }
 
 //~ int main_ping(StrPing p, int* best_ttl)
@@ -151,6 +162,7 @@ int main_ping(StrPing p, int* best_ttl)
          source[MAX_ADDRESS];
     
     int portno     = 80,
+		reached    = 0,
 		out        = FAILURE,
 		att        = p.attempts,
         bytes      = ICMP_LEN;
@@ -164,6 +176,8 @@ int main_ping(StrPing p, int* best_ttl)
     strcpy(dest,   p.ipstr);
     strcpy(source, p.myip);
     
+    strcpy(domain, p.address);
+    
     // init remote addr structure and other params
     server.sin_family = AF_INET;
     server.sin_port = htons(portno);
@@ -175,20 +189,25 @@ int main_ping(StrPing p, int* best_ttl)
     inet_aton(p.myip, &(my_addr.sin_addr));
     
     //gestion Ctrl+C
-    if (p.attempts == -1)
+    if (best_ttl == NULL)
     {
 		sigIntHandler.sa_handler = handlerArret;
 		sigemptyset(&sigIntHandler.sa_mask);
 		sigIntHandler.sa_flags = 0;
 		sigaction(SIGINT, &sigIntHandler, NULL);
 	}
+	
+	/*rtt_min = rtt_max = rtt_avg = */count = transmitted = received = 0;
     
+    printf("PING %s (%s) %d bytes of data.\n", p.address, p.ipstr, bytes);
     
     //-----------------------------------------------------//
 	// starting loop
 	//-----------------------------------------------------//
 	for (;;)
     {
+		count++;
+		
 		send_socket = OpenRawSocket('i');
 		receive_socket = OpenRawSocket('i');
 		
@@ -208,34 +227,41 @@ int main_ping(StrPing p, int* best_ttl)
 
 		else
 		{
+			reached = 0;
+			transmitted++;
 			if (recvfrom(receive_socket, recvbuf, MAX_PACKET, 0, (struct sockaddr*)&recept, &addrlen) != -1)
 			{
+				received++;
 				rsaddr = inet_ntoa(recept.sin_addr);				
 				if (strcmp(dest, rsaddr)==0)
 				{
-					printf("PING OK\n");
+					reached = 1;
+					printf("%d bytes from %s (%s): icmp_req=%-2d ttl=%-3d time=???\n", ICMP_LEN, p.address, p.ipstr, count, p.ttl);
 					// traitement réponse (timeout, ttl exceeded, dest unreach...)
 				}
 			}
-			else
+			
+			if (!reached)
 			{
-				printf("PING PAS OK\n");
+				printf("ping: destination unreached: ???\n");
 				// attempts
 				if (att == 0)
 				{
 					out = LOSS;
-					//~ *best_ttl++;
+					if (best_ttl != NULL) (*best_ttl)++;
 				}
 				else if (att > 0)
 				{
-					printf("ATTEMPTS...\n");
 					close(send_socket);
 					close(receive_socket);
 					
 					do
 					{
-						printf("att %d\n", att);
-						p.ttl = *++best_ttl;
+						count++;
+						
+						if (best_ttl != NULL) (*best_ttl)++;
+						p.ttl++;
+						printf("ping: attempt %2d to reach destination (ttl=%d)", att, p.ttl);
 						
 						send_socket = OpenRawSocket('i');
 						receive_socket = OpenRawSocket('i');
@@ -256,16 +282,23 @@ int main_ping(StrPing p, int* best_ttl)
 
 						else
 						{
+							reached = 0;
+							transmitted++;
 							if (recvfrom(receive_socket, recvbuf, MAX_PACKET, 0, (struct sockaddr*)&recept, &addrlen) != -1)
 							{
+								received++;
 								rsaddr = inet_ntoa(recept.sin_addr);				
 								if (strcmp(dest, rsaddr)==0)
 								{
+									reached = 1;
+									printf("\n%d bytes from %s (%s): icmp_req=%-2d ttl=%-3d time=???\n", ICMP_LEN, p.address, p.ipstr, count, p.ttl);
 									out = LOSS;
 								}
 							}
-							else
+							
+							if (!reached)
 							{
+								printf("... failed\n");
 								att--;
 							}
 						}
