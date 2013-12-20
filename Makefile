@@ -31,11 +31,11 @@ all : main main_ping main_traceroute
 	
 
 main.o : main.c netanalyser.h traceroute.h ping.h common.h log.h
-main_traceroute.o : main_traceroute.c traceroute.h common.h log.h
-main_ping.o : main_ping.c ping.h common.h log.h
+main_traceroute.o : main_traceroute.c traceroute.h common.h
+main_ping.o : main_ping.c ping.h common.h
 netanalyser.o : netanalyser.c netanalyser.h traceroute.h ping.h common.h log.h
-traceroute.o : traceroute.c traceroute.h log.h common.h
-ping.o : ping.c ping.h common.h log.h
+traceroute.o : traceroute.c traceroute.h common.h
+ping.o : ping.c ping.h common.h
 common.o : common.c common.h
 log.o : log.c log.h
 
