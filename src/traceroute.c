@@ -5,9 +5,6 @@
 #include "../include/traceroute.h"
 #include "../include/log.h"
 
-#define PCKT_LEN 8192
-char buffer[PCKT_LEN] = {0};
-
 void UsageTraceroute()
 {
     fprintf(stderr, "usage: traceroute servername [-I | -U | -T] [-p PORT] [-f FIRST_TTL] [-m MAX_TTL] [-h HOPS] [-r SEC] [-s SEC] [-a ATTEMPTS]\n");
