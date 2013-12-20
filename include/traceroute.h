@@ -10,7 +10,8 @@
 
 #include "../include/common.h"
 
-/**\struct Structure for LoopTrace
+/**\struct
+ * \brief Contains ttl values [...], probe method, log file
  * \see LoopTrace
  * \see NewTrace
  * \author tim
@@ -26,7 +27,8 @@ typedef struct str_trace {
 		attempts;  /**< Number of attempts when packet is lost */
 } StrTrace;
 
-/**\brief Structure for main_traceroute
+/**\struct
+ * \brief Contains StrTrace, port number, and 3 strings (domain, ip, myip)
  * \see main_traceroute
  * \see NewTraceRoute
  * \author tim

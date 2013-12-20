@@ -24,7 +24,8 @@
 #define LOSS    2
 #define FAILURE 3
 
-/**\brief Structure for ping program
+/**\struct
+ * \brief Contains ping data [...], strings (domain, ip, myip) and log file
  * \see NewPing
  * \author val
  */
