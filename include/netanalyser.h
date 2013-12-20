@@ -25,11 +25,6 @@ void ShowStatistics(void);
  */
 void handler(int signum);
 
-/**\brief Will be replaced by main_ping when finished
- * \author tom & val
- */
-int ping(char* address, int threshold, int frequency, int attempts, int* best_ttl);
-
 /**\brief Test if host specified by address is joinable (ICMP probes)
  * \param dest Destination IP address
  * \param source My IP address

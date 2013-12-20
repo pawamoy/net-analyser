@@ -22,18 +22,6 @@ void handler(int signum)
 	exit(signum);
 }
 
-int ping(char* address, int threshold, int frequency, int attempts, int* best_ttl)
-{
-	int i;
-	for (i=0; i<2; i++)
-	{
-		printf("Ping at %s with a threshold of %d%%, a frequency of %d, %d attempts if packets are lost, and a max ttl of %d\n",
-			address, threshold, frequency, attempts, *best_ttl);
-		sleep(frequency);
-	}
-	return LOSS;
-}
-
 int HostIsJoinable(char* dest, char* source, int max_ping, int attempts)
 {
 	//-----------------------------------------------------//

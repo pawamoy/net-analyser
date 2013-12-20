@@ -12,7 +12,8 @@ int main(int argc, char* argv[]) {
 	//-----------------------------------------------------//
 	StrTraceRoute tr = NewTraceRoute();
 	StrPing p        = NewPing();
-	int i, best_ttl  = 0;
+	int i, best_ttl  = 0,
+	       logdata   = 0;
     char *icmp       = "icmp",
          *udp        = "udp" ,
          *tcp        = "tcp" ,
@@ -20,6 +21,7 @@ int main(int argc, char* argv[]) {
 	FILE* logfile    = NULL;
     struct sigaction action;
 	
+	p.attempts = 0;
 	
 	//-----------------------------------------------------//
 	// verifications
@@ -62,6 +64,10 @@ int main(int argc, char* argv[]) {
 						exit(-1);
 					}
 				}
+		else if (strcmp(argv[i], "-l") == 0 ||
+		         strcmp(argv[i], "--log") == 0) {
+					 logdata = 1;
+				}
 		else if (strcmp(argv[i], "-r") == 0 ||
 		         strcmp(argv[i], "--recv-timer") == 0) {
 					if (i+1<argc) {
@@ -102,7 +108,7 @@ int main(int argc, char* argv[]) {
 					probe = tcp;
 				}
 		else if (strcmp(argv[i], "-a") == 0 ||
-		         strcmp(argv[i], "--attempt") == 0) {
+		         strcmp(argv[i], "--attempts") == 0) {
 					if (i+1<argc) {
 						tr.s.attempts = atoi(argv[i+1]); i++;
 					} else {
@@ -138,7 +144,7 @@ int main(int argc, char* argv[]) {
 					}
 				}
 		else if (strcmp(argv[i], "-A") == 0 ||
-		         strcmp(argv[i], "--attempts") == 0) {
+		         strcmp(argv[i], "--Attempts") == 0) {
 					if (i+1<argc) {
 						p.attempts = atoi(argv[i+1]); i++;
 					} else {
@@ -181,9 +187,15 @@ int main(int argc, char* argv[]) {
 	//-----------------------------------------------------//
 	// log file and get some infos
 	//-----------------------------------------------------//
-	logfile = OpenLog();
-	if (logfile == NULL) exit(-1);
-	tr.s.logfile = p.logfile = logfile;
+	if (logdata == 1) {
+		logfile = OpenLog();
+		if (logfile == NULL) exit(-1);
+		tr.s.logfile = p.logfile = logfile;
+			
+		fprintf(logfile, "Domain: %s\n", tr.address);
+		fprintf(logfile, "Resolved IP address: %s\n", tr.ipstr);
+		fprintf(logfile, "My IP address: %s\n", tr.myip);
+	}
 	
 	tr.s.probe = probe[0];
 	
@@ -191,9 +203,6 @@ int main(int argc, char* argv[]) {
     tr.ipstr   = p.ipstr   = GetIPFromHostname(argv[1]);
     tr.myip    = p.myip    = GetMyIP();
     
-	fprintf(logfile, "Domain: %s\n", tr.address);
-	fprintf(logfile, "Resolved IP address: %s\n", tr.ipstr);
-	fprintf(logfile, "My IP address: %s\n", tr.myip);
 	
 
 	//-----------------------------------------------------//
@@ -249,7 +258,8 @@ int main(int argc, char* argv[]) {
 	//-----------------------------------------------------//
 	// close log file
 	//-----------------------------------------------------//
-	CloseLog();
+	if (logdata ==1)
+		CloseLog();
 	
 	return 0;
 }
