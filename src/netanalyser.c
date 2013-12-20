@@ -12,7 +12,7 @@ void UsageNetAnalyser()
 
 void ShowStatistics()
 {
-	printf("Statistics :D\n");
+	printf("\n--- in dev, try with ping only ---\n");
 }
 
 void handler(int signum)
