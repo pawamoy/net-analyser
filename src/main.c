@@ -21,6 +21,7 @@ int main(int argc, char* argv[]) {
 	FILE* logfile    = NULL;
     struct sigaction action;
 	
+	p.attempts = 0;
 	
 	//-----------------------------------------------------//
 	// verifications
