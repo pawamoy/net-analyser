@@ -7,7 +7,7 @@
 
 void UsageTraceroute()
 {
-    fprintf(stderr, "usage: traceroute servername [-b icmp|udp|tcp] [-p PORT] [-n MIN_TTL] [-m MAX_TTL] [-h HOPS] [-r SEC] [-s SEC]\n");
+    fprintf(stderr, "usage: traceroute servername [-I | -U | -T] [-p PORT] [-f FIRST_TTL] [-m MAX_TTL] [-h HOPS] [-r SEC] [-s SEC] [-a ATTEMPTS]\n");
     exit(-1);
 }
 
