@@ -81,9 +81,11 @@ int IsMyAddress(char* addr)
 	if (strlen(addr) >= 8)
 	{
 		if (isdigit(addr[0]) &&
-			isdigit(addr[1]) &&
-			isdigit(addr[2]) &&
-			addr[3] == '.')
+			isdigit(addr[1]) && (
+			(
+				isdigit(addr[2]) &&
+				addr[3] == '.'
+			) || addr[2] == '.'))
 		{
 			return 1;
 		}

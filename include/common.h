@@ -35,7 +35,8 @@ char* GetIPFromHostname(const char *hostname);
  */
 char* GetMyIP(void);
 
-/**\brief Parse address to see if it is my address (not local)
+/**\brief Parse address to see if it is my address (not local).
+ * Search for address like XX[X].*, different from 127.0.0.1
  * \param addr Pointer to a string (address)
  * \return 1(yes), 0(no)
  * \author tim

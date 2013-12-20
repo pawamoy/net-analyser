@@ -12,7 +12,8 @@ int main(int argc, char* argv[]) {
 	//-----------------------------------------------------//
 	StrTraceRoute tr = NewTraceRoute();
 	StrPing p        = NewPing();
-	int i, best_ttl  = 0;
+	int i, best_ttl  = 0,
+	       logdata   = 0;
     char *icmp       = "icmp",
          *udp        = "udp" ,
          *tcp        = "tcp" ,

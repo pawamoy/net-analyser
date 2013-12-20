@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
 	// variables declaration
 	//-----------------------------------------------------//
     StrTraceRoute tr = NewTraceRoute();
-    int i, logdata = 0;
+    int i = 0;
     char *icmp  = "icmp";
     char *udp   = "udp" ;
     char *tcp   = "tcp" ;
